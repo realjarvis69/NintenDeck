@@ -11,6 +11,10 @@ const getCurrentFanMode = callable<[], number>("get_current_fan_mode");
 const startTegrastats = callable<[], void>("start_tegrastats");
 const stopTegrastats = callable<[], void>("stop_tegrastats");
 const getTegrastatsData = callable<[], any>("get_tegrastats_data");
+const setBrightness = callable<[value: number], void>("set_brightness");
+const setVolume = callable<[value: number], void>("set_volume");
+const getBrightness = callable<[], number>("get_brightness");
+const getVolume = callable<[], number>("get_volume");
 
 const OC_NAMES: Record<number, string> = {
   0: "Console", 1: "Handheld", 2: "OC CPU",
@@ -24,19 +28,26 @@ const FAN_NAMES: Record<number, string> = {
 const Content = () => {
   const [ocMode, setOcModeState] = useState<number>(0);
   const [fanMode, setFanModeState] = useState<number>(0);
+  const [brightness, setBrightnessState] = useState<number>(50);
+  const [volume, setVolumeState] = useState<number>(50);
   const [loading, setLoading] = useState<boolean>(true);
   const [temps, setTemps] = useState({ cpu: "--", gpu: "--", battery: "--" });
 
+  // Load all initial values and start background processes
   useEffect(() => {
     const loadInitial = async () => {
       try {
-        const [oc, fan] = await Promise.all([
+        const [oc, fan, br, vol] = await Promise.all([
           getCurrentOcMode(),
           getCurrentFanMode(),
+          getBrightness(),
+          getVolume(),
         ]);
         setOcModeState(oc);
         setFanModeState(fan);
-        await startTegrastats();  // start background process – does not block UI
+        setBrightnessState(br);
+        setVolumeState(vol);
+        await startTegrastats(); // non‑blocking, starts background reader
       } catch (e) {
         console.error("Failed to load initial settings:", e);
       } finally {
@@ -79,6 +90,24 @@ const Content = () => {
     }
   };
 
+  const handleBrightnessChange = async (value: number) => {
+    setBrightnessState(value);
+    try {
+      await setBrightness(value);
+    } catch (e) {
+      console.error("Failed to set brightness:", e);
+    }
+  };
+
+  const handleVolumeChange = async (value: number) => {
+    setVolumeState(value);
+    try {
+      await setVolume(value);
+    } catch (e) {
+      console.error("Failed to set volume:", e);
+    }
+  };
+
   if (loading) {
     return (
       <PanelSection title="NintenDeck">
@@ -88,45 +117,74 @@ const Content = () => {
   }
 
   return (
-    <PanelSection title="TDP CONTROL">
-      {/* Temperature display – two rows */}
-      <div style={{ margin: "10px 0", padding: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", textAlign: "center" }}>
-        <div style={{ display: "flex", justifyContent: "space-around", fontSize: "14px", fontWeight: "bold", marginBottom: "4px" }}>
-          <span>CPU</span>
-          <span>GPU</span>
-          <span>Battery</span>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-around", fontSize: "14px" }}>
-          <span>{temps.cpu}°C</span>
-          <span>{temps.gpu}°C</span>
-          <span>{temps.battery}°C</span>
-        </div>
-      </div>
+    <>
+      {/* SYSTEM section (brightness + volume) */}
+      <PanelSection title="SYSTEM">
+        <PanelSectionRow>
+          <SliderField
+            label={`Brightness: ${brightness}%`}
+            value={brightness}
+            min={0}
+            max={100}
+            step={1}
+            showValue={false}
+            onChange={handleBrightnessChange}
+          />
+        </PanelSectionRow>
+        <PanelSectionRow>
+          <SliderField
+            label={`Volume: ${volume}%`}
+            value={volume}
+            min={0}
+            max={100}
+            step={1}
+            showValue={false}
+            onChange={handleVolumeChange}
+          />
+        </PanelSectionRow>
+      </PanelSection>
 
-      <PanelSectionRow>
-        <SliderField
-          label={`OC Mode: ${OC_NAMES[ocMode]}`}
-          value={ocMode}
-          min={0}
-          max={6}
-          step={1}
-          showValue={false}
-          onChange={handleOcChange}
-        />
-      </PanelSectionRow>
+      {/* TDP CONTROL section (OC, fan, temperatures) */}
+      <PanelSection title="TDP CONTROL">
+        {/* Temperature display – two rows */}
+        <div style={{ margin: "10px 0", padding: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", textAlign: "center" }}>
+          <div style={{ display: "flex", justifyContent: "space-around", fontSize: "14px", fontWeight: "bold", marginBottom: "4px" }}>
+            <span>CPU</span>
+            <span>GPU</span>
+            <span>Battery</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-around", fontSize: "14px" }}>
+            <span>{temps.cpu}°C</span>
+            <span>{temps.gpu}°C</span>
+            <span>{temps.battery}°C</span>
+          </div>
+        </div>
 
-      <PanelSectionRow>
-        <SliderField
-          label={`Fan Mode: ${FAN_NAMES[fanMode]}`}
-          value={fanMode}
-          min={0}
-          max={2}
-          step={1}
-          showValue={false}
-          onChange={handleFanChange}
-        />
-      </PanelSectionRow>
-    </PanelSection>
+        <PanelSectionRow>
+          <SliderField
+            label={`OC Mode: ${OC_NAMES[ocMode]}`}
+            value={ocMode}
+            min={0}
+            max={6}
+            step={1}
+            showValue={false}
+            onChange={handleOcChange}
+          />
+        </PanelSectionRow>
+
+        <PanelSectionRow>
+          <SliderField
+            label={`Fan Mode: ${FAN_NAMES[fanMode]}`}
+            value={fanMode}
+            min={0}
+            max={2}
+            step={1}
+            showValue={false}
+            onChange={handleFanChange}
+          />
+        </PanelSectionRow>
+      </PanelSection>
+    </>
   );
 };
 

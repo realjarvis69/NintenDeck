@@ -1,7 +1,9 @@
 {
   "name": "NintenDeck Settings",
   "author": "real_jarvis",
-  "flags": ["debug", "_root"],
-  "api_version": 1,
-  }
+  "version": "1.0.0",
+  "description": "NintenDeck Settings",
+  "main": "dist/index.js",
+  "flags": ["debug"],
+  "api_version": 1
 }

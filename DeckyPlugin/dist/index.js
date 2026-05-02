@@ -1,4 +1,4 @@
-const manifest = {"name":"Example Plugin"};
+const manifest = {"name":"NintenDeck Settings"};
 const API_VERSION = 2;
 const internalAPIConnection = window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit;
 if (!internalAPIConnection) {
@@ -92,6 +92,10 @@ const getCurrentFanMode = callable("get_current_fan_mode");
 const startTegrastats = callable("start_tegrastats");
 const stopTegrastats = callable("stop_tegrastats");
 const getTegrastatsData = callable("get_tegrastats_data");
+const setBrightness = callable("set_brightness");
+const setVolume = callable("set_volume");
+const getBrightness = callable("get_brightness");
+const getVolume = callable("get_volume");
 const OC_NAMES = {
     0: "Console", 1: "Handheld", 2: "OC CPU",
     3: "OC GPU", 4: "OC All", 5: "Perf All", 6: "Perf OC All",
@@ -102,18 +106,25 @@ const FAN_NAMES = {
 const Content = () => {
     const [ocMode, setOcModeState] = SP_REACT.useState(0);
     const [fanMode, setFanModeState] = SP_REACT.useState(0);
+    const [brightness, setBrightnessState] = SP_REACT.useState(50);
+    const [volume, setVolumeState] = SP_REACT.useState(50);
     const [loading, setLoading] = SP_REACT.useState(true);
     const [temps, setTemps] = SP_REACT.useState({ cpu: "--", gpu: "--", battery: "--" });
+    // Load all initial values and start background processes
     SP_REACT.useEffect(() => {
         const loadInitial = async () => {
             try {
-                const [oc, fan] = await Promise.all([
+                const [oc, fan, br, vol] = await Promise.all([
                     getCurrentOcMode(),
                     getCurrentFanMode(),
+                    getBrightness(),
+                    getVolume(),
                 ]);
                 setOcModeState(oc);
                 setFanModeState(fan);
-                await startTegrastats(); // start background process – does not block UI
+                setBrightnessState(br);
+                setVolumeState(vol);
+                await startTegrastats(); // non‑blocking, starts background reader
             }
             catch (e) {
                 console.error("Failed to load initial settings:", e);
@@ -156,10 +167,28 @@ const Content = () => {
             console.error("Failed to set fan mode:", e);
         }
     };
+    const handleBrightnessChange = async (value) => {
+        setBrightnessState(value);
+        try {
+            await setBrightness(value);
+        }
+        catch (e) {
+            console.error("Failed to set brightness:", e);
+        }
+    };
+    const handleVolumeChange = async (value) => {
+        setVolumeState(value);
+        try {
+            await setVolume(value);
+        }
+        catch (e) {
+            console.error("Failed to set volume:", e);
+        }
+    };
     if (loading) {
         return (SP_JSX.jsx(DFL.PanelSection, { title: "NintenDeck", children: SP_JSX.jsx("div", { children: "Loading NintenDeck..." }) }));
     }
-    return (SP_JSX.jsxs(DFL.PanelSection, { title: "TDP CONTROL", children: [SP_JSX.jsxs("div", { style: { margin: "10px 0", padding: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", textAlign: "center" }, children: [SP_JSX.jsxs("div", { style: { display: "flex", justifyContent: "space-around", fontSize: "14px", fontWeight: "bold", marginBottom: "4px" }, children: [SP_JSX.jsx("span", { children: "CPU" }), SP_JSX.jsx("span", { children: "GPU" }), SP_JSX.jsx("span", { children: "Battery" })] }), SP_JSX.jsxs("div", { style: { display: "flex", justifyContent: "space-around", fontSize: "14px" }, children: [SP_JSX.jsxs("span", { children: [temps.cpu, "\u00B0C"] }), SP_JSX.jsxs("span", { children: [temps.gpu, "\u00B0C"] }), SP_JSX.jsxs("span", { children: [temps.battery, "\u00B0C"] })] })] }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `OC Mode: ${OC_NAMES[ocMode]}`, value: ocMode, min: 0, max: 6, step: 1, showValue: false, onChange: handleOcChange }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `Fan Mode: ${FAN_NAMES[fanMode]}`, value: fanMode, min: 0, max: 2, step: 1, showValue: false, onChange: handleFanChange }) })] }));
+    return (SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsxs(DFL.PanelSection, { title: "SYSTEM", children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `Brightness: ${brightness}%`, value: brightness, min: 0, max: 100, step: 1, showValue: false, onChange: handleBrightnessChange }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `Volume: ${volume}%`, value: volume, min: 0, max: 100, step: 1, showValue: false, onChange: handleVolumeChange }) })] }), SP_JSX.jsxs(DFL.PanelSection, { title: "TDP CONTROL", children: [SP_JSX.jsxs("div", { style: { margin: "10px 0", padding: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", textAlign: "center" }, children: [SP_JSX.jsxs("div", { style: { display: "flex", justifyContent: "space-around", fontSize: "14px", fontWeight: "bold", marginBottom: "4px" }, children: [SP_JSX.jsx("span", { children: "CPU" }), SP_JSX.jsx("span", { children: "GPU" }), SP_JSX.jsx("span", { children: "Battery" })] }), SP_JSX.jsxs("div", { style: { display: "flex", justifyContent: "space-around", fontSize: "14px" }, children: [SP_JSX.jsxs("span", { children: [temps.cpu, "\u00B0C"] }), SP_JSX.jsxs("span", { children: [temps.gpu, "\u00B0C"] }), SP_JSX.jsxs("span", { children: [temps.battery, "\u00B0C"] })] })] }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `OC Mode: ${OC_NAMES[ocMode]}`, value: ocMode, min: 0, max: 6, step: 1, showValue: false, onChange: handleOcChange }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `Fan Mode: ${FAN_NAMES[fanMode]}`, value: fanMode, min: 0, max: 2, step: 1, showValue: false, onChange: handleFanChange }) })] })] }));
 };
 var index = definePlugin(() => ({
     name: "NintenDeck",

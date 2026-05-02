@@ -4,12 +4,15 @@ import decky
 import subprocess
 import re
 import asyncio
+import os
 
 class Plugin:
     def __init__(self):
         self.tegrastats_process = None
         self.latest_line = ""
         self.lock = asyncio.Lock()
+        self.runtime_dir = f"/run/user/{os.getuid()}"
+        decky.logger.info(f"Plugin init, XDG_RUNTIME_DIR={self.runtime_dir}")
 
     # -------------------- OC Mode (pkexec) --------------------
     async def set_oc_mode(self, value: int) -> None:
@@ -23,13 +26,11 @@ class Plugin:
     async def get_current_oc_mode(self) -> int:
         try:
             result = subprocess.run(["pkexec", "nvpmodel", "-q"], capture_output=True, text=True, check=True)
-            # Find the last line that is a pure integer (ignore errors)
             last_int = 0
             for line in result.stdout.strip().splitlines():
                 line = line.strip()
                 if line.isdigit():
                     last_int = int(line)
-            decky.logger.info(f"Current OC mode: {last_int}")
             return last_int
         except Exception as e:
             decky.logger.error(f"Failed to get OC mode: {e}")
@@ -57,14 +58,69 @@ class Plugin:
                 match = re.search(r":\s*(.+)", first_line)
                 if match:
                     fan_name = match.group(1).strip()
-                    decky.logger.info(f"Current fan name: {fan_name}")
                     return self.FAN_NAME_TO_INDEX.get(fan_name, 0)
             return 0
         except Exception as e:
             decky.logger.error(f"Failed to get fan mode: {e}")
             return 0
 
-    # -------------------- Temperatures (tegrastats) --------------------
+    # -------------------- Brightness (using sg to add video group) --------------------
+    async def get_brightness(self) -> int:
+        try:
+            result = subprocess.run(["brightnessctl", "get"], capture_output=True, text=True, check=True)
+            current = int(result.stdout.strip())
+            max_result = subprocess.run(["brightnessctl", "max"], capture_output=True, text=True, check=True)
+            max_val = int(max_result.stdout.strip())
+            percent = int((current / max_val) * 100)
+            return percent
+        except Exception as e:
+            decky.logger.error(f"get_brightness failed: {e}")
+            return 50
+
+    async def set_brightness(self, value: int) -> None:
+        value = max(1, min(100, value))
+        try:
+            # Use sg to run brightnessctl with video group (bypasses missing supplementary groups)
+            subprocess.run(
+                ["sg", "video", "-c", f"brightnessctl set {value}%"],
+                check=True, capture_output=True, text=True
+            )
+            decky.logger.info(f"Brightness set to {value}% via sg video")
+        except Exception as e:
+            decky.logger.error(f"set_brightness failed: {e}")
+            raise
+
+    # -------------------- Volume --------------------
+    async def get_volume(self) -> int:
+        try:
+            env = os.environ.copy()
+            env['XDG_RUNTIME_DIR'] = self.runtime_dir
+            result = subprocess.run(
+                ["pactl", "get-sink-volume", "@DEFAULT_SINK@"],
+                capture_output=True, text=True, check=True, env=env
+            )
+            match = re.search(r'(\d+)%', result.stdout)
+            if match:
+                return int(match.group(1))
+        except Exception as e:
+            decky.logger.error(f"get_volume failed: {e}")
+        return 50
+
+    async def set_volume(self, value: int) -> None:
+        value = max(0, min(100, value))
+        try:
+            env = os.environ.copy()
+            env['XDG_RUNTIME_DIR'] = self.runtime_dir
+            subprocess.run(
+                ["pactl", "set-sink-volume", "@DEFAULT_SINK@", f"{value}%"],
+                check=True, capture_output=True, text=True, env=env
+            )
+            decky.logger.info(f"Volume set to {value}%")
+        except Exception as e:
+            decky.logger.error(f"set_volume failed: {e}")
+            raise
+
+    # -------------------- TegraStats --------------------
     async def start_tegrastats(self) -> None:
         if self.tegrastats_process is not None:
             return
@@ -76,7 +132,7 @@ class Plugin:
             asyncio.create_task(self._read_tegrastats_output())
             decky.logger.info("tegrastats started")
         except FileNotFoundError:
-            decky.logger.error("tegrastats not found – temperature display disabled")
+            decky.logger.error("tegrastats not found")
         except Exception as e:
             decky.logger.error(f"Failed to start tegrastats: {e}")
 
@@ -124,7 +180,11 @@ class Plugin:
         }
 
     async def _main(self):
-        decky.logger.info("NintenDeck plugin loaded (OC/fan/temps only)")
+        # Log groups for debugging
+        import grp
+        groups = [grp.getgrgid(g).gr_name for g in os.getgroups()]
+        decky.logger.info(f"Plugin groups: {groups}")
+        decky.logger.info("NintenDeck plugin loaded (brightness uses sg video)")
 
     async def _unload(self):
         await self.stop_tegrastats()
