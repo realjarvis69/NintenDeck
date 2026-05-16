@@ -39,3 +39,5 @@ TODO
 [Switchroot](https://switchroot.org/) for the Linux ports to Switch
 
 [DeckyLoader](https://decky.xyz/) for the plugin system and plugin creation tools
+
+[gamepad-osk](https://github.com/0x90shell/gamepad-osk) for the keyboard found in Gaming Mode
