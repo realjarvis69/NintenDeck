@@ -1,0 +1,93 @@
+#!/bin/bash
+
+# === CONFIGURATION ===
+KDE_SESSION="plasma"
+OPENBOX_SESSION="openbox"
+SDDM_CONFIG_DIR="/etc/sddm.conf.d"
+SDDM_CONFIG_FILE="$SDDM_CONFIG_DIR/kde_settings.conf"
+
+CURRENT_USER=$(whoami)
+
+ensure_sddm_config() {
+    if [ ! -d "$SDDM_CONFIG_DIR" ]; then
+        echo "Creating SDDM config directory..."
+        pkexec mkdir -p "$SDDM_CONFIG_DIR"
+    fi
+
+    if [ ! -f "$SDDM_CONFIG_FILE" ]; then
+        echo "Creating SDDM config file for user $CURRENT_USER..."
+        # Use printf + pkexec tee to write the file
+        printf '[Autologin]\nUser=%s\nSession=%s\nRelogin=true\n' "$CURRENT_USER" "$KDE_SESSION" | \
+            pkexec tee "$SDDM_CONFIG_FILE" > /dev/null
+    else
+        # Update User line using pkexec sed
+        if grep -q "^User=" "$SDDM_CONFIG_FILE" 2>/dev/null; then
+            pkexec sed -i "s/^User=.*/User=$CURRENT_USER/" "$SDDM_CONFIG_FILE"
+        else
+            pkexec sed -i "/\[Autologin\]/a User=$CURRENT_USER" "$SDDM_CONFIG_FILE"
+        fi
+    fi
+}
+
+set_next_session() {
+    local session="$1"
+    ensure_sddm_config
+
+    if grep -q "^Session=" "$SDDM_CONFIG_FILE" 2>/dev/null; then
+        pkexec sed -i "s/^Session=.*/Session=$session/" "$SDDM_CONFIG_FILE"
+    else
+        pkexec sed -i "/\[Autologin\]/a Session=$session" "$SDDM_CONFIG_FILE"
+    fi
+
+    echo "Next session set to: $session for user $CURRENT_USER"
+}
+
+get_current_de() {
+    if [[ "$XDG_CURRENT_DESKTOP" == *"KDE"* ]] || pgrep -x "plasmashell" > /dev/null 2>&1; then
+        echo "kde"
+    elif [[ "$XDG_CURRENT_DESKTOP" == *"Openbox"* ]] || pgrep -x "openbox" > /dev/null 2>&1; then
+        echo "openbox"
+    else
+        echo "unknown"
+    fi
+}
+
+logout_immediate() {
+    if pgrep -x "plasmashell" > /dev/null 2>&1; then
+        echo "Logging out of KDE..."
+        qdbus org.kde.ksmserver /KSMServer logout 0 0 0 2>/dev/null || \
+        kdeinit_shutdown 2>/dev/null || \
+        loginctl terminate-user "$CURRENT_USER"
+    elif pgrep -x "openbox" > /dev/null 2>&1; then
+        echo "Logging out of Openbox..."
+        openbox --exit 2>/dev/null || \
+        pkill -x "openbox" || \
+        loginctl terminate-user "$CURRENT_USER"
+    else
+        loginctl terminate-user "$CURRENT_USER"
+    fi
+}
+
+# === MAIN ===
+current_de=$(get_current_de)
+
+case $current_de in
+    kde)
+        echo "Currently in KDE Plasma (user: $CURRENT_USER)"
+        echo "Switching to Openbox on next login..."
+        set_next_session "$OPENBOX_SESSION"
+        sleep 1
+        logout_immediate
+        ;;
+    openbox)
+        echo "Currently in Openbox (user: $CURRENT_USER)"
+        echo "Switching to KDE Plasma on next login..."
+        set_next_session "$KDE_SESSION"
+        sleep 1
+        logout_immediate
+        ;;
+    unknown)
+        echo "Could not detect current DE."
+        exit 1
+        ;;
+esac

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo "bootloader" > /sys/devices/r2p/action
+echo 0 > /sys/devices/r2p/param1
+echo 0 > /sys/devices/r2p/param2
+reboot

@@ -1,0 +1,34 @@
+#!/bin/bash
+openbox-session &
+
+# disable mouse mode
+xinput set-prop "Nintendo Switch Combined Joy-Cons" "Generate Key Events" 0
+xinput set-prop "Nintendo Switch Combined Joy-Cons" "Generate Mouse Events" 0
+# hide mouse
+xdotool mousemove 10000 10000
+# thingamabongs
+picom &
+xbindkeys &
+# No azkali im not going to set the default OC mode to 4 instead of doing this cuz i want handheld mode in desktop mode
+pkexec nvpmodel -m 4
+# Fix sleep and dock returning OC mode to handheld
+/usr/share/nvpmodel_indicator/nvpmodel_helper.sh 5 1
+# splash
+feh --fullscreen --borderless --auto-zoom --hide-pointer --image-bg black /usr/share/splash/steam-splash.png &
+# make screen not go turn off
+xset s off
+xset s noblank
+xset s -dpms
+# battery check loop so steam has a battery icon
+while ! upower -e | grep -q 'battery_battery'; do
+    sleep 1
+done
+# launch Big Picture
+sleep 5
+DISPLAY=:0 steam -bigpicture -no-cef-sandbox -cef-single-process &
+# make sure picom always running because it likes to crash
+# also check if openbox is running cuz otherwise kde likes to bug out
+while pgrep -x "openbox" > /dev/null; do
+    pgrep -x picom > /dev/null || (picom &)
+    sleep 0.5
+done

@@ -107,596 +107,323 @@ function FaBluetooth (props) {
   return GenIcon({"attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M507.73 109.1c-2.24-9.03-13.54-12.09-20.12-5.51l-74.36 74.36-67.88-11.31-11.31-67.88 74.36-74.36c6.62-6.62 3.43-17.9-5.66-20.16-47.38-11.74-99.55.91-136.58 37.93-39.64 39.64-50.55 97.1-34.05 147.2L18.74 402.76c-24.99 24.99-24.99 65.51 0 90.5 24.99 24.99 65.51 24.99 90.5 0l213.21-213.21c50.12 16.71 107.47 5.68 147.37-34.22 37.07-37.07 49.7-89.32 37.91-136.73zM64 472c-13.25 0-24-10.75-24-24 0-13.26 10.75-24 24-24s24 10.74 24 24c0 13.25-10.75 24-24 24z"},"child":[]}]})(props);
 }
 
-// src/lib/i18n.ts
-
-// ---------- Translations ----------
-const defaultTranslations = {
-    en: {
-        plugin_title: "NintenDeck",
-        // QAM
-        brightness: "Brightness",
-        volume: "Volume",
-        oc_mode: "OC Mode",
-        fan_mode: "Fan Mode",
-        settings: "Settings",
-        loading: "Loading...",
-        // Tabs
-        tab_system: "System",
-        tab_tdp: "TDP & Fan",
-        tab_utilities: "Utilities",
-        tab_compatibility: "Compatibility",
-        tab_wifi: "Wi-Fi",
-        tab_bluetooth: "Bluetooth",
-        // System
-        brightness_label: "Brightness",
-        volume_label: "Volume",
-        // Wi-Fi
-        wifi_title: "Wi-Fi",
-        wifi_toggle: "Wi-Fi",
-        wifi_refresh: "Refresh",
-        wifi_no_connection: "No active connection",
-        wifi_available_networks: "Available Networks",
-        wifi_connect: "Connect",
-        wifi_disconnect: "Disconnect",
-        wifi_password: "Password",
-        wifi_show_password: "Show Password",
-        wifi_hide_password: "Hide Password",
-        wifi_connecting: "Connecting...",
-        wifi_connection_failed: "Connection failed",
-        wifi_wrong_password: "Wrong password",
-        wifi_enter_password: "Enter password for {ssid}",
-        wifi_connected: "Connected",
-        wifi_network: "Network",
-        wifi_secured: "Secured",
-        wifi_unsecured: "Open",
-        wifi_show_all: "Show all devices",
-        // Bluetooth
-        bluetooth_title: "Bluetooth",
-        bluetooth_toggle: "Bluetooth",
-        bluetooth_refresh: "Refresh",
-        bluetooth_paired_devices: "Paired Devices",
-        bluetooth_available_devices: "Available Devices",
-        bluetooth_no_devices: "No devices found",
-        bluetooth_no_paired_devices: "No paired devices",
-        bluetooth_devices_found: "devices found",
-        bluetooth_connect: "Connect",
-        bluetooth_disconnect: "Disconnect",
-        bluetooth_pair: "Pair",
-        bluetooth_forget: "Forget",
-        bluetooth_connecting: "Connecting...",
-        bluetooth_connection_failed: "Connection failed",
-        bluetooth_paired: "Paired",
-        bluetooth_trusted: "Trusted",
-        bluetooth_show_all: "Show all devices",
-        bluetooth_placeholder: "Bluetooth functionality will be implemented in a future update. Sorry for the inconvenience!",
-        bluetooth_scanning: "Scanning for devices...",
-        // TDP
-        tdp_title: "TDP & Fan Control",
-        cpu: "CPU",
-        gpu: "GPU",
-        battery: "Battery",
-        tdp_mode: "TDP Mode",
-        fan_mode_label: "Fan Mode",
-        tdp_console: "Console",
-        tdp_handheld: "Handheld",
-        tdp_oc_cpu: "OC CPU",
-        tdp_oc_gpu: "OC GPU",
-        tdp_oc_all: "OC All",
-        tdp_perf_all: "Perf All",
-        tdp_perf_oc_all: "Perf OC All",
-        fan_console: "Console",
-        fan_handheld: "Handheld",
-        fan_cool: "Cool",
-        // Utilities
-        utilities_title: "Utilities",
-        reboot_hekate: "Reboot to Hekate",
-        switch_desktop: "Switch to Desktop",
-        confirm: "Confirm",
-        // Compatibility
-        compatibility_title: "Game Compatibility",
-        filters: "Filters",
-        search_games: "Search games...",
-        show_installed_only: "Show only installed games",
-        no_games_found: "No games found",
-        sync: "Sync Database",
-        syncing: "Syncing...",
-        back: "Back",
-        game_filters: "Filters",
-        show_all: "Show all games",
-        switch_model: "Switch Model",
-        switch_lite: "Switch Lite",
-        switch_oled: "Switch OLED",
-        switch_v1: "Switch V1",
-        switch_v2: "Switch V2",
-        oc_mode_filter: "OC Mode",
-        oc_mode_console: "Console",
-        oc_mode_handheld: "Handheld",
-        oc_mode_oc_cpu: "OC CPU",
-        oc_mode_oc_gpu: "OC GPU",
-        oc_mode_oc_all: "OC All",
-        oc_mode_perf_oc: "Perf OC",
-        oc_mode_perf_oc_all: "Perf OC All",
-        rating_filter: "Rating",
-        rating_perfect: "Perfect",
-        rating_playable: "Playable",
-        rating_unplayable: "Unplayable",
-        rating_unsupported: "Unsupported",
-        rating_unknown: "Unknown",
-        compatibility_rating: "Rating",
-        recommended_oc_mode: "Recommended OC Mode",
-        average_fps: "Average FPS",
-        recommended_proton: "Recommended Proton",
-        launch_options: "Launch Options",
-        extra_info: "Extra Info",
-        submitted_by: "Submitted by",
-        copy_to_clipboard: "Copy to Clipboard",
-        copied: "Copied!",
-        not_rated: "Not Rated",
-        // Filters
-        switch_model_filter: "Switch Model",
-        oc_mode_filter_label: "OC Mode",
-        rating_filter_label: "Rating",
-        // Errors
-        error_loading_games: "Failed to load games",
-        error_loading_wifi: "Failed to load Wi-Fi networks",
-        error_loading_bluetooth: "Failed to load Bluetooth devices",
-        error_connection_failed: "Connection failed",
-        error_wrong_password: "Wrong password",
-        error_timeout: "Operation timed out",
-        error_permission_denied: "Permission denied",
-        error_no_network: "No network connection",
-        // Placeholders
-        placeholder_soon: "Coming soon!",
-    },
-    ru: {
-        plugin_title: "NintenDeck",
-        // QAM
-        brightness: "Яркость",
-        volume: "Громкость",
-        oc_mode: "Режим OC",
-        fan_mode: "Режим вентилятора",
-        settings: "Настройки",
-        loading: "Загрузка...",
-        // Tabs
-        tab_system: "Система",
-        tab_tdp: "OC и вентилятор",
-        tab_utilities: "Утилиты",
-        tab_compatibility: "Совместимость",
-        tab_wifi: "Wi-Fi",
-        tab_bluetooth: "Bluetooth",
-        // System
-        brightness_label: "Яркость",
-        volume_label: "Громкость",
-        // Wi-Fi
-        wifi_title: "Wi-Fi",
-        wifi_toggle: "Wi-Fi",
-        wifi_refresh: "Обновить",
-        wifi_no_connection: "Нет активного подключения",
-        wifi_available_networks: "Доступные сети",
-        wifi_connect: "Подключиться",
-        wifi_disconnect: "Отключиться",
-        wifi_password: "Пароль",
-        wifi_show_password: "Показать пароль",
-        wifi_hide_password: "Скрыть пароль",
-        wifi_connecting: "Подключение...",
-        wifi_connection_failed: "Ошибка подключения",
-        wifi_wrong_password: "Неверный пароль",
-        wifi_enter_password: "Введите пароль для {ssid}",
-        wifi_connected: "Подключено",
-        wifi_network: "Сеть",
-        wifi_secured: "Защищено",
-        wifi_unsecured: "Открыто",
-        wifi_show_all: "Показать все устройства",
-        // Bluetooth
-        bluetooth_title: "Bluetooth",
-        bluetooth_toggle: "Bluetooth",
-        bluetooth_refresh: "Обновить",
-        bluetooth_paired_devices: "Сопряжённые устройства",
-        bluetooth_available_devices: "Доступные устройства",
-        bluetooth_no_devices: "Устройства не найдены",
-        bluetooth_no_paired_devices: "Нет сопряжённых устройств",
-        bluetooth_devices_found: "устройств найдено",
-        bluetooth_connect: "Подключиться",
-        bluetooth_disconnect: "Отключить",
-        bluetooth_pair: "Сопрячь",
-        bluetooth_forget: "Забыть",
-        bluetooth_connecting: "Подключение...",
-        bluetooth_connection_failed: "Ошибка подключения",
-        bluetooth_paired: "Сопряжено",
-        bluetooth_trusted: "Доверенное",
-        bluetooth_show_all: "Показать все устройства",
-        bluetooth_placeholder: "Функциональность Bluetooth будет добавлена в будущем обновлении. Извините за неудобства!",
-        bluetooth_scanning: "Поиск устройств...",
-        // TDP
-        tdp_title: "Управление OC и вентилятором",
-        cpu: "ЦП",
-        gpu: "ГП",
-        battery: "Батарея",
-        tdp_mode: "Режим OC",
-        fan_mode_label: "Режим вентилятора",
-        tdp_console: "Консоль",
-        tdp_handheld: "Портативный",
-        tdp_oc_cpu: "OC ЦП",
-        tdp_oc_gpu: "OC ГП",
-        tdp_oc_all: "OC всё",
-        tdp_perf_all: "Макс. производительность",
-        tdp_perf_oc_all: "Макс. OC",
-        fan_console: "Консоль",
-        fan_handheld: "Портативный",
-        fan_cool: "Охлажденный",
-        // Utilities
-        utilities_title: "Утилиты",
-        reboot_hekate: "Перезагрузка в Hekate",
-        switch_desktop: "Переключиться на рабочий стол",
-        confirm: "Подтвердить",
-        // Compatibility
-        compatibility_title: "Совместимость игр",
-        filters: "Фильтры",
-        search_games: "Поиск игр...",
-        show_installed_only: "Показать только установленные игры",
-        no_games_found: "Игр не найдено",
-        sync: "Синхронизировать базу данных",
-        syncing: "Синхронизация...",
-        back: "Назад",
-        game_filters: "Фильтры",
-        show_all: "Показать все игры",
-        switch_model: "Модель Switch",
-        switch_lite: "Switch Lite",
-        switch_oled: "Switch OLED",
-        switch_v1: "Switch V1",
-        switch_v2: "Switch V2",
-        oc_mode_filter: "Режим OC",
-        oc_mode_console: "Консоль",
-        oc_mode_handheld: "Портативный",
-        oc_mode_oc_cpu: "OC ЦП",
-        oc_mode_oc_gpu: "OC ГП",
-        oc_mode_oc_all: "OC всё",
-        oc_mode_perf_oc: "Макс. OC",
-        oc_mode_perf_oc_all: "Макс. OC всё",
-        rating_filter: "Рейтинг",
-        rating_perfect: "Идеально",
-        rating_playable: "Играбельно",
-        rating_unplayable: "Неиграбельно",
-        rating_unsupported: "Не поддерживается",
-        rating_unknown: "Неизвестно",
-        compatibility_rating: "Рейтинг",
-        recommended_oc_mode: "Рекомендуемый режим OC",
-        average_fps: "Средний FPS",
-        recommended_proton: "Рекомендуемый Proton",
-        launch_options: "Параметры запуска",
-        extra_info: "Дополнительная информация",
-        submitted_by: "Отправлено",
-        copy_to_clipboard: "Копировать в буфер обмена",
-        copied: "Скопировано!",
-        not_rated: "Неизвестно",
-        // Filters
-        switch_model_filter: "Модель Switch",
-        oc_mode_filter_label: "Режим OC",
-        rating_filter_label: "Рейтинг",
-        // Errors
-        error_loading_games: "Не удалось загрузить игры",
-        error_loading_wifi: "Не удалось загрузить сети Wi-Fi",
-        error_loading_bluetooth: "Не удалось загрузить Bluetooth-устройства",
-        error_connection_failed: "Ошибка подключения",
-        error_wrong_password: "Неверный пароль",
-        error_timeout: "Превышено время ожидания",
-        error_permission_denied: "Отказано в доступе",
-        error_no_network: "Нет сетевого подключения",
-        // Placeholders
-        placeholder_soon: "Скоро!",
-    },
-    fr: {
-        plugin_title: "NintenDeck",
-        // QAM
-        brightness: "Luminosité",
-        volume: "Volume",
-        oc_mode: "Mode OC",
-        fan_mode: "Mode Ventilateur",
-        settings: "Paramètres",
-        loading: "Chargement...",
-        // Tabs
-        tab_system: "Système",
-        tab_tdp: "TDP & Ventilateur",
-        tab_utilities: "Utilitaires",
-        tab_compatibility: "Compatibilité",
-        tab_wifi: "Wi-Fi",
-        tab_bluetooth: "Bluetooth",
-        // System
-        brightness_label: "Luminosité",
-        volume_label: "Volume",
-        // Wi-Fi
-        wifi_title: "Wi-Fi",
-        wifi_toggle: "Wi-Fi",
-        wifi_refresh: "Rafraîchir",
-        wifi_no_connection: "Aucune connection active",
-        wifi_available_networks: "Réseaux disponibles",
-        wifi_connect: "Se connecter",
-        wifi_disconnect: "Se déconnecter",
-        wifi_password: "Mot de passe",
-        wifi_show_password: "Montrer le mot de passe",
-        wifi_hide_password: "Cacher le mot de passe",
-        wifi_connecting: "Connection...",
-        wifi_connection_failed: "Connection échouée",
-        wifi_wrong_password: "Mauvais mot de passe",
-        wifi_enter_password: "Saisir le mot de passe {ssid}",
-        wifi_connected: "Connecté",
-        wifi_network: "Réseau",
-        wifi_secured: "Sécurisé",
-        wifi_unsecured: "Ouvert",
-        wifi_show_all: "Montrer tout les appareils",
-        // Bluetooth
-        bluetooth_title: "Bluetooth",
-        bluetooth_toggle: "Bluetooth",
-        bluetooth_refresh: "Rafraîchir",
-        bluetooth_paired_devices: "Appareils appairés",
-        bluetooth_available_devices: "Appareils disponibles",
-        bluetooth_no_devices: "Aucun appareil trouvé",
-        bluetooth_no_paired_devices: "Aucun appareil appairé",
-        bluetooth_devices_found: "appareils trouvés",
-        bluetooth_connect: "Se connecter",
-        bluetooth_disconnect: "Se déconnecter",
-        bluetooth_pair: "Appairer",
-        bluetooth_forget: "Oublier",
-        bluetooth_connecting: "Connection...",
-        bluetooth_connection_failed: "Connection échouée",
-        bluetooth_paired: "Appairé",
-        bluetooth_trusted: "Fiable",
-        bluetooth_show_all: "Montrer tout les appareils",
-        bluetooth_placeholder: "La fonctionnalité Bluetooth sera implémentée dans une future mise à jour. Désolé pour le dérangement !",
-        bluetooth_scanning: "Recherche d'appareils...",
-        // TDP
-        tdp_title: "TDP & Contrôle du Ventilateur",
-        cpu: "CPU",
-        gpu: "GPU",
-        battery: "Batterie",
-        tdp_mode: "Mode OC",
-        fan_mode_label: "Mode Ventilateur",
-        tdp_console: "Console",
-        tdp_handheld: "Portable",
-        tdp_oc_cpu: "OC CPU",
-        tdp_oc_gpu: "OC GPU",
-        tdp_oc_all: "OC All",
-        tdp_perf_all: "Perf All",
-        tdp_perf_oc_all: "Perf OC All",
-        fan_console: "Console",
-        fan_handheld: "Portable",
-        fan_cool: "Cool",
-        // Utilities
-        utilities_title: "Utilitaires",
-        reboot_hekate: "Rédémarrer vers Hekate",
-        switch_desktop: "Basculer vers le Bureau",
-        confirm: "Confirmer",
-        // Compatibility
-        compatibility_title: "Compatibilité des jeux",
-        filters: "Filtres",
-        search_games: "Rechercher des jeux...",
-        show_installed_only: "Afficher uniquement les jeux installés",
-        no_games_found: "Aucun jeu trouvé",
-        sync: "Synchroniser la base de données",
-        syncing: "Synchronisation...",
-        back: "Retour",
-        game_filters: "Filtres de jeu",
-        show_all: "Tout afficher",
-        switch_model: "Modèle de Switch",
-        switch_lite: "Switch Lite",
-        switch_oled: "Switch OLED",
-        switch_v1: "Switch v1",
-        switch_v2: "Switch v2",
-        oc_mode_filter: "OC Mode",
-        oc_mode_console: "Console",
-        oc_mode_handheld: "Portable",
-        oc_mode_oc_cpu: "OC CPU",
-        oc_mode_oc_gpu: "OC GPU",
-        oc_mode_oc_all: "OC All",
-        oc_mode_perf_oc: "Perf OC",
-        oc_mode_perf_oc_all: "Perf OC All",
-        rating_filter: "Évaluation",
-        rating_perfect: "Parfait",
-        rating_playable: "Jouable",
-        rating_unplayable: "Injouable",
-        rating_unsupported: "Non pris en charge",
-        rating_unknown: "Inconnu",
-        compatibility_rating: "Évaluation",
-        recommended_oc_mode: "Mode OC recommandé",
-        average_fps: "FPS moyen",
-        recommended_proton: "Version de Proton recommandée",
-        launch_options: "Options de lancement",
-        extra_info: "Informations supplémentaires",
-        submitted_by: "Soumis par",
-        copy_to_clipboard: "Copier dans le presse-papiers",
-        copied: "Copié!",
-        not_rated: "Non évalué",
-        // Filters
-        switch_model_filter: "Modèle de Switch",
-        oc_mode_filter_label: "Mode OC",
-        rating_filter_label: "Évaluation",
-        // Errors
-        error_loading_games: "Échec du chargement des jeux",
-        error_loading_wifi: "Échec du chargement des paramètres Wi-Fi",
-        error_loading_bluetooth: "Échec du chargement des paramètres Bluetooth",
-        error_connection_failed: "Échec de la connexion",
-        error_wrong_password: "Mot de passe incorrect",
-        error_timeout: "Délai d'attente dépassé",
-        error_permission_denied: "Permission refusée",
-        error_no_network: "Aucune connexion réseau",
-        // Placeholder
-        placeholder_soon: "Bientôt disponible!",
-    },
-    es: {
-        plugin_title: "NintenDeck",
-        // QAM
-        brightness: "Brillo",
-        volume: "Volumen",
-        oc_mode: "Modo OC",
-        fan_mode: "Modo ventilador",
-        settings: "Ajustes",
-        loading: "Cargando...",
-        // Tabs
-        tab_system: "Sistema",
-        tab_tdp: "TDP y ventilador",
-        tab_utilities: "Utilidades",
-        tab_compatibility: "Compatibilidad",
-        tab_wifi: "Wi-Fi",
-        tab_bluetooth: "Bluetooth",
-        // System
-        brightness_label: "Brillo",
-        volume_label: "Volumen",
-        // Wi-Fi
-        wifi_title: "Wi-Fi",
-        wifi_toggle: "Wi-Fi",
-        wifi_refresh: "Actualizar",
-        wifi_no_connection: "No hay conexiones activas",
-        wifi_available_networks: "Redes disponibles",
-        wifi_connect: "Conectar",
-        wifi_disconnect: "Desconectar",
-        wifi_password: "Contraseña",
-        wifi_show_password: "Mostrar contraseña",
-        wifi_hide_password: "Ocultar contraseña",
-        wifi_connecting: "Conectando...",
-        wifi_connection_failed: "Conexión fallida",
-        wifi_wrong_password: "Contraseña incorrecta",
-        wifi_enter_password: "Contraseña para {ssid}",
-        wifi_connected: "Conectado",
-        wifi_network: "Red",
-        wifi_secured: "Segura",
-        wifi_unsecured: "Abierta",
-        wifi_show_all: "Mostrar todos los dispositivos",
-        // Bluetooth
-        bluetooth_title: "Bluetooth",
-        bluetooth_toggle: "Bluetooth",
-        bluetooth_refresh: "Actualizar",
-        bluetooth_paired_devices: "Dispositivos emparejados",
-        bluetooth_available_devices: "Dispositivos disponibles",
-        bluetooth_no_devices: "No se encontraron dispositivos",
-        bluetooth_no_paired_devices: "No hay dispositivos emparejados",
-        bluetooth_devices_found: "dispositivos encontrados",
-        bluetooth_connect: "Conectar",
-        bluetooth_disconnect: "Desconectar",
-        bluetooth_pair: "Vincular",
-        bluetooth_forget: "Olvidar",
-        bluetooth_connecting: "Conectando...",
-        bluetooth_connection_failed: "Conexión fallida",
-        bluetooth_paired: "Vinculado",
-        bluetooth_trusted: "De confianza",
-        bluetooth_show_all: "Mostrar todos los dispositivos",
-        bluetooth_placeholder: "La funcionalidad Bluetooth se implementará en una futura actualización. ¡Disculpen las molestias!",
-        bluetooth_scanning: "Buscando dispositivos...",
-        // TDP
-        tdp_title: "Control TDP y ventiladores",
-        cpu: "CPU",
-        gpu: "GPU",
-        battery: "Batería",
-        tdp_mode: "Modo TDP",
-        fan_mode_label: "Modo ventilador",
-        tdp_console: "Consola",
-        tdp_handheld: "Portátil",
-        tdp_oc_cpu: "OC CPU",
-        tdp_oc_gpu: "OC GPU",
-        tdp_oc_all: "OC a TODO",
-        tdp_perf_all: "Rendimiento OC",
-        tdp_perf_oc_all: "Rendimiento OC a TODO",
-        fan_console: "Consola",
-        fan_handheld: "Portátil",
-        fan_cool: "Refrigeración",
-        // Utilities
-        utilities_title: "Utilidades",
-        reboot_hekate: "Reiniciar a Hekate",
-        switch_desktop: "Cambiar a Escritorio",
-        confirm: "Confirmar",
-        // Compatibility
-        compatibility_title: "Compatibilidad de juegos",
-        filters: "Filtros",
-        search_games: "Buscar juegos...",
-        show_installed_only: "Mostrar solo los juegos instalados",
-        no_games_found: "No se encontraron juegos",
-        sync: "Sincronizar base de datos",
-        syncing: "Sincronizando...",
-        back: "Atrás",
-        game_filters: "Filtros",
-        show_all: "Mostrar todos los juegos",
-        switch_model: "Modelo de Switch",
-        switch_lite: "Switch Lite",
-        switch_oled: "Switch OLED",
-        switch_v1: "Switch V1",
-        switch_v2: "Switch V2",
-        oc_mode_filter: "Modo OC",
-        oc_mode_console: "Consola",
-        oc_mode_handheld: "Portátil",
-        oc_mode_oc_cpu: "OC CPU",
-        oc_mode_oc_gpu: "OC GPU",
-        oc_mode_oc_all: "OC a TODO",
-        oc_mode_perf_oc: "Rendimiento OC",
-        oc_mode_perf_oc_all: "Rendimiento OC a TODO",
-        rating_filter: "Clasificación",
-        rating_perfect: "Perfecto",
-        rating_playable: "Jugable",
-        rating_unplayable: "Injugable",
-        rating_unsupported: "No compatible",
-        rating_unknown: "Desconocido",
-        compatibility_rating: "Clasificación",
-        recommended_oc_mode: "Modo OC recomendado",
-        average_fps: "FPS promedio",
-        recommended_proton: "Protón recomendado",
-        launch_options: "Opciones de lanzamiento",
-        extra_info: "Información adicional",
-        submitted_by: "Enviado por",
-        copy_to_clipboard: "Copiar al portapapeles",
-        copied: "¡Copiado!",
-        not_rated: "No clasificado",
-        // Filters
-        switch_model_filter: "Modelo de Switch",
-        oc_mode_filter_label: "Modo OC",
-        rating_filter_label: "Clasificación",
-        // Errors
-        error_loading_games: "No se pudieron cargar juegos",
-        error_loading_wifi: "No se pudieron cargar redes Wi-Fi",
-        error_loading_bluetooth: "No se pudieron cargar dispositivos Bluetooth",
-        error_connection_failed: "Falló la conexión",
-        error_wrong_password: "Contraseña incorrecta",
-        error_timeout: "La operación ha caducado",
-        error_permission_denied: "Permiso denegado",
-        error_no_network: "Sin conexión de red",
-        // Placeholders
-        placeholder_soon: "¡Muy pronto!",
-    },
+var plugin_title$2 = "NintenDeck";
+var tab_system$2 = "System";
+var tab_tdp$2 = "TDP Control";
+var tab_utilities$2 = "Utilities";
+var tab_compatibility$2 = "Compatibility";
+var back$2 = "Back";
+var brightness$2 = "Brightness";
+var volume$2 = "Volume";
+var cpu$2 = "CPU";
+var gpu$2 = "GPU";
+var battery$2 = "Battery";
+var oc_mode$2 = "OC Mode";
+var fan_mode$2 = "Fan Mode";
+var reboot_hekate$2 = "Reboot to Hekate";
+var switch_desktop$2 = "Switch to Desktop Mode";
+var filters$2 = "Filters";
+var search_games$2 = "Search games";
+var loading$2 = "Loading...";
+var loading_games$2 = "Loading game compatibility...";
+var syncing$2 = "Syncing...";
+var sync$2 = "Sync Database";
+var show_all$2 = "Show All";
+var game_filters$2 = "Game Filters";
+var switch_model$2 = "Switch Model";
+var oc_mode_filter$2 = "OC Mode";
+var rating_filter$2 = "Rating";
+var compatibility_rating$2 = "Compatibility Rating";
+var recommended_oc_mode$2 = "Recommended OC Mode";
+var average_fps$2 = "Average FPS";
+var recommended_proton$2 = "Recommended Proton Version";
+var launch_options$2 = "Launch Options";
+var extra_info$2 = "Extra Information";
+var submitted_by$2 = "Submitted by";
+var copy_to_clipboard$2 = "Copy to Clipboard";
+var no_info$2 = "No additional information available.";
+var confirm$2 = "Confirm?";
+var warning_title$2 = "Language Notice";
+var warning_message$2 = "Game compatibility entries are only available in English. The plugin interface itself supports your language.";
+var rating_perfect$2 = "Perfect";
+var rating_playable$2 = "Playable";
+var rating_unsupported$2 = "Unsupported";
+var rating_unknown$2 = "Unknown";
+var settings$2 = "Settings";
+var en = {
+	plugin_title: plugin_title$2,
+	tab_system: tab_system$2,
+	tab_tdp: tab_tdp$2,
+	tab_utilities: tab_utilities$2,
+	tab_compatibility: tab_compatibility$2,
+	back: back$2,
+	brightness: brightness$2,
+	volume: volume$2,
+	cpu: cpu$2,
+	gpu: gpu$2,
+	battery: battery$2,
+	oc_mode: oc_mode$2,
+	fan_mode: fan_mode$2,
+	reboot_hekate: reboot_hekate$2,
+	switch_desktop: switch_desktop$2,
+	filters: filters$2,
+	search_games: search_games$2,
+	loading: loading$2,
+	loading_games: loading_games$2,
+	syncing: syncing$2,
+	sync: sync$2,
+	show_all: show_all$2,
+	game_filters: game_filters$2,
+	switch_model: switch_model$2,
+	oc_mode_filter: oc_mode_filter$2,
+	rating_filter: rating_filter$2,
+	compatibility_rating: compatibility_rating$2,
+	recommended_oc_mode: recommended_oc_mode$2,
+	average_fps: average_fps$2,
+	recommended_proton: recommended_proton$2,
+	launch_options: launch_options$2,
+	extra_info: extra_info$2,
+	submitted_by: submitted_by$2,
+	copy_to_clipboard: copy_to_clipboard$2,
+	no_info: no_info$2,
+	confirm: confirm$2,
+	warning_title: warning_title$2,
+	warning_message: warning_message$2,
+	rating_perfect: rating_perfect$2,
+	rating_playable: rating_playable$2,
+	rating_unsupported: rating_unsupported$2,
+	rating_unknown: rating_unknown$2,
+	settings: settings$2
 };
-let translations = defaultTranslations["en"];
+
+var plugin_title$1 = "NintenDeck";
+var tab_system$1 = "Sistema";
+var tab_tdp$1 = "Control TDP";
+var tab_utilities$1 = "Utilidades";
+var tab_compatibility$1 = "Compatibilidad";
+var back$1 = "Atrás";
+var brightness$1 = "Brillo";
+var volume$1 = "Volumen";
+var cpu$1 = "CPU";
+var gpu$1 = "GPU";
+var battery$1 = "Batería";
+var oc_mode$1 = "Modo OC";
+var fan_mode$1 = "Modo Ventilador";
+var reboot_hekate$1 = "Reiniciar a Hekate";
+var switch_desktop$1 = "Cambiar a modo escritorio";
+var filters$1 = "Filtros";
+var search_games$1 = "Buscar juegos";
+var loading$1 = "Cargando...";
+var loading_games$1 = "Cargando compatibilidad...";
+var syncing$1 = "Sincronizando...";
+var sync$1 = "Sincronizar base de datos";
+var show_all$1 = "Mostrar todo";
+var game_filters$1 = "Filtros de juegos";
+var switch_model$1 = "Modelo Switch";
+var oc_mode_filter$1 = "Modo OC";
+var rating_filter$1 = "Clasificación";
+var compatibility_rating$1 = "Clasificación de compatibilidad";
+var recommended_oc_mode$1 = "Modo OC recomendado";
+var average_fps$1 = "FPS promedio";
+var recommended_proton$1 = "Versión de Proton recomendada";
+var launch_options$1 = "Opciones de inicio";
+var extra_info$1 = "Información adicional";
+var submitted_by$1 = "Enviado por";
+var copy_to_clipboard$1 = "Copiar al portapapeles";
+var no_info$1 = "No hay información adicional disponible.";
+var confirm$1 = "¿Confirmar?";
+var warning_title$1 = "Aviso de idioma";
+var warning_message$1 = "Las entradas de compatibilidad de juegos solo están disponibles en inglés. La interfaz del complemento es compatible con tu idioma.";
+var rating_perfect$1 = "Perfecto";
+var rating_playable$1 = "Jugable";
+var rating_unsupported$1 = "No compatible";
+var rating_unknown$1 = "Desconocido";
+var settings$1 = "Ajustes";
+var es = {
+	plugin_title: plugin_title$1,
+	tab_system: tab_system$1,
+	tab_tdp: tab_tdp$1,
+	tab_utilities: tab_utilities$1,
+	tab_compatibility: tab_compatibility$1,
+	back: back$1,
+	brightness: brightness$1,
+	volume: volume$1,
+	cpu: cpu$1,
+	gpu: gpu$1,
+	battery: battery$1,
+	oc_mode: oc_mode$1,
+	fan_mode: fan_mode$1,
+	reboot_hekate: reboot_hekate$1,
+	switch_desktop: switch_desktop$1,
+	filters: filters$1,
+	search_games: search_games$1,
+	loading: loading$1,
+	loading_games: loading_games$1,
+	syncing: syncing$1,
+	sync: sync$1,
+	show_all: show_all$1,
+	game_filters: game_filters$1,
+	switch_model: switch_model$1,
+	oc_mode_filter: oc_mode_filter$1,
+	rating_filter: rating_filter$1,
+	compatibility_rating: compatibility_rating$1,
+	recommended_oc_mode: recommended_oc_mode$1,
+	average_fps: average_fps$1,
+	recommended_proton: recommended_proton$1,
+	launch_options: launch_options$1,
+	extra_info: extra_info$1,
+	submitted_by: submitted_by$1,
+	copy_to_clipboard: copy_to_clipboard$1,
+	no_info: no_info$1,
+	confirm: confirm$1,
+	warning_title: warning_title$1,
+	warning_message: warning_message$1,
+	rating_perfect: rating_perfect$1,
+	rating_playable: rating_playable$1,
+	rating_unsupported: rating_unsupported$1,
+	rating_unknown: rating_unknown$1,
+	settings: settings$1
+};
+
+var plugin_title = "NintenDeck";
+var tab_system = "Система";
+var tab_tdp = "Управление TDP";
+var tab_utilities = "Утилиты";
+var tab_compatibility = "Совместимость";
+var back = "Назад";
+var brightness = "Яркость";
+var volume = "Громкость";
+var cpu = "ЦП";
+var gpu = "ГП";
+var battery = "Батарея";
+var oc_mode = "Режим OC";
+var fan_mode = "Режим вентилятора";
+var reboot_hekate = "Перезагрузка в Hekate";
+var switch_desktop = "Переключиться в рабочий стол";
+var filters = "Фильтры";
+var search_games = "Поиск игр";
+var loading = "Загрузка...";
+var loading_games = "Загрузка совместимости игр...";
+var syncing = "Синхронизация...";
+var sync = "Синхронизировать базу данных";
+var show_all = "Показать все";
+var game_filters = "Фильтры игр";
+var switch_model = "Модель Switch";
+var oc_mode_filter = "Режим OC";
+var rating_filter = "Рейтинг";
+var compatibility_rating = "Рейтинг совместимости";
+var recommended_oc_mode = "Рекомендуемый режим OC";
+var average_fps = "Средний FPS";
+var recommended_proton = "Рекомендуемая версия Proton";
+var launch_options = "Параметры запуска";
+var extra_info = "Дополнительная информация";
+var submitted_by = "Предоставил";
+var copy_to_clipboard = "Копировать в буфер обмена";
+var no_info = "Нет дополнительной информации.";
+var confirm = "Подтвердить?";
+var warning_title = "Языковое уведомление";
+var warning_message = "Записи совместимости игр доступны только на английском языке. Интерфейс плагина поддерживает ваш язык.";
+var rating_perfect = "Идеально";
+var rating_playable = "Играбельно";
+var rating_unsupported = "Не поддерживается";
+var rating_unknown = "Неизвестно";
+var settings = "Настройки";
+var ru = {
+	plugin_title: plugin_title,
+	tab_system: tab_system,
+	tab_tdp: tab_tdp,
+	tab_utilities: tab_utilities,
+	tab_compatibility: tab_compatibility,
+	back: back,
+	brightness: brightness,
+	volume: volume,
+	cpu: cpu,
+	gpu: gpu,
+	battery: battery,
+	oc_mode: oc_mode,
+	fan_mode: fan_mode,
+	reboot_hekate: reboot_hekate,
+	switch_desktop: switch_desktop,
+	filters: filters,
+	search_games: search_games,
+	loading: loading,
+	loading_games: loading_games,
+	syncing: syncing,
+	sync: sync,
+	show_all: show_all,
+	game_filters: game_filters,
+	switch_model: switch_model,
+	oc_mode_filter: oc_mode_filter,
+	rating_filter: rating_filter,
+	compatibility_rating: compatibility_rating,
+	recommended_oc_mode: recommended_oc_mode,
+	average_fps: average_fps,
+	recommended_proton: recommended_proton,
+	launch_options: launch_options,
+	extra_info: extra_info,
+	submitted_by: submitted_by,
+	copy_to_clipboard: copy_to_clipboard,
+	no_info: no_info,
+	confirm: confirm,
+	warning_title: warning_title,
+	warning_message: warning_message,
+	rating_perfect: rating_perfect,
+	rating_playable: rating_playable,
+	rating_unsupported: rating_unsupported,
+	rating_unknown: rating_unknown,
+	settings: settings
+};
+
+const translations = {
+    en,
+    es,
+    ru,
+};
+let currentLang = 'en';
 function setLanguage(lang) {
-    translations = defaultTranslations[lang] || defaultTranslations["en"];
+    if (translations[lang]) {
+        currentLang = lang;
+    }
+    else {
+        currentLang = 'en';
+    }
 }
 function t(key) {
-    return translations[key] || key;
+    const val = translations[currentLang][key];
+    if (val)
+        return val;
+    const fallback = translations.en[key];
+    if (fallback)
+        return fallback;
+    return key;
 }
-function detectLanguage() {
+async function detectLanguage() {
     try {
-        const steamLang = window.SteamClient?.System?.GetSystemLanguage?.();
-        if (steamLang) {
-            const langMap = {
-                english: "en",
-                russian: "ru",
-                spanish: "es",
-                french: "fr",
-            };
-            if (langMap[steamLang])
-                return langMap[steamLang];
+        // @ts-ignore
+        if (window.SteamClient && window.SteamClient.System && window.SteamClient.System.GetSystemLanguage) {
+            // @ts-ignore
+            const steamLang = await window.SteamClient.System.GetSystemLanguage();
+            if (steamLang && translations[steamLang])
+                return steamLang;
         }
     }
-    catch (e) { }
-    const browserLang = navigator.language.split("-")[0];
-    if (browserLang in defaultTranslations)
+    catch (e) {
+        console.warn('Steam language detection failed', e);
+    }
+    const browserLang = navigator.language.split('-')[0];
+    if (translations[browserLang])
         return browserLang;
-    return "en";
+    return 'en';
 }
-// ---------- Translate Rating Helper ----------
 function translateRating(rating) {
-    const ratingMap = {
-        Perfect: t("rating_perfect"),
-        Playable: t("rating_playable"),
-        Unplayable: t("rating_unplayable"),
-        Unsupported: t("rating_unsupported"),
-        Unknown: t("rating_unknown"),
+    const map = {
+        'Perfect': 'rating_perfect',
+        'Playable': 'rating_playable',
+        'Unsupported': 'rating_unsupported',
+        'Unknown': 'rating_unknown'
     };
-    return ratingMap[rating] || rating;
+    const key = map[rating];
+    return key ? t(key) : rating;
 }
 
 const Scrollable = SP_REACT.forwardRef(({ style, ...props }, ref) => {
@@ -728,18 +455,6 @@ const getWifiStatus = callable("get_wifi_status");
 const scanWifiNetworks = callable("scan_wifi_networks");
 const connectWifi = callable("connect_wifi");
 const toggleWifi = callable("toggle_wifi");
-// Bluetooth callables
-callable("get_bluetooth_status");
-callable("start_bluetooth_scan");
-callable("stop_bluetooth_scan");
-callable("get_discovered_devices");
-callable("get_paired_devices");
-callable("get_connected_devices");
-callable("toggle_bluetooth");
-callable("refresh_bluetooth");
-callable("connect_bluetooth");
-callable("disconnect_bluetooth");
-callable("forget_bluetooth");
 // Filter settings
 const getSetting = callable("get_setting");
 const setSetting = callable("set_setting");
@@ -957,7 +672,7 @@ const TdpView = () => {
     const handleFanChange = async (v) => { setFanModeState(v); await setFanMode(v); };
     if (loading)
         return SP_JSX.jsx("div", { children: t("loading") });
-    return (SP_JSX.jsxs(DFL.PanelSection, { title: t("tab_tdp"), children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: { margin: "10px 0", padding: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", textAlign: "center" }, children: [SP_JSX.jsxs("div", { style: { display: "flex", justifyContent: "space-around", fontSize: "14px", fontWeight: "bold", marginBottom: "4px" }, children: [SP_JSX.jsx("span", { children: t("cpu") }), SP_JSX.jsx("span", { children: t("gpu") }), SP_JSX.jsx("span", { children: t("battery") })] }), SP_JSX.jsxs("div", { style: { display: "flex", justifyContent: "space-around", fontSize: "14px" }, children: [SP_JSX.jsxs("span", { children: [temps.cpu, "\u00B0C"] }), SP_JSX.jsxs("span", { children: [temps.gpu, "\u00B0C"] }), SP_JSX.jsxs("span", { children: [temps.battery, "\u00B0C"] })] })] }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `${t("tdp_mode")}: ${OC_NAMES[ocMode]}`, value: ocMode, min: 0, max: 6, step: 1, showValue: false, onChange: handleOcChange }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `${t("fan_mode_label")}: ${FAN_NAMES[fanMode]}`, value: fanMode, min: 0, max: 2, step: 1, showValue: false, onChange: handleFanChange }) })] }));
+    return (SP_JSX.jsxs(DFL.PanelSection, { title: t("tab_tdp"), children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: { margin: "10px 0", padding: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", textAlign: "center" }, children: [SP_JSX.jsxs("div", { style: { display: "flex", justifyContent: "space-around", fontSize: "14px", fontWeight: "bold", marginBottom: "4px" }, children: [SP_JSX.jsx("span", { children: t("cpu") }), SP_JSX.jsx("span", { children: t("gpu") }), SP_JSX.jsx("span", { children: t("battery") })] }), SP_JSX.jsxs("div", { style: { display: "flex", justifyContent: "space-around", fontSize: "14px" }, children: [SP_JSX.jsxs("span", { children: [temps.cpu, "\u00B0C"] }), SP_JSX.jsxs("span", { children: [temps.gpu, "\u00B0C"] }), SP_JSX.jsxs("span", { children: [temps.battery, "\u00B0C"] })] })] }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `${t("oc_mode")}: ${OC_NAMES[ocMode]}`, value: ocMode, min: 0, max: 6, step: 1, showValue: false, onChange: handleOcChange }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `${t("fan_mode")}: ${FAN_NAMES[fanMode]}`, value: fanMode, min: 0, max: 2, step: 1, showValue: false, onChange: handleFanChange }) })] }));
 };
 const UtilitiesView = ({ confirmHekate, setConfirmHekate, hekateTimeout, confirmDesktop, setConfirmDesktop, desktopTimeout }) => {
     const handleRebootHekateClick = () => {
@@ -990,14 +705,14 @@ const UtilitiesView = ({ confirmHekate, setConfirmHekate, hekateTimeout, confirm
     };
     return (SP_JSX.jsxs(DFL.PanelSection, { title: t("tab_utilities"), children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: handleRebootHekateClick, children: confirmHekate ? t("confirm") : t("reboot_hekate") }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: handleSwitchDesktopClick, children: confirmDesktop ? t("confirm") : t("switch_desktop") }) })] }));
 };
-// ---------- Wi-Fi Views ----------
+// ---------- Wi-Fi Views (separate password view) ----------
 const WifiPasswordView = ({ ssid, onConnect, onCancel, isConnecting, error }) => {
     const [password, setPassword] = SP_REACT.useState("");
     const [showPassword, setShowPassword] = SP_REACT.useState(false);
-    return (SP_JSX.jsx(DFL.PanelSection, { title: `${t("wifi_enter_password").replace("{ssid}", ssid)}`, children: SP_JSX.jsxs("div", { style: { padding: "8px" }, children: [SP_JSX.jsx(DFL.TextField, { value: password, onChange: (e) => setPassword(e.target.value), bIsPassword: !showPassword, style: { width: "100%", marginBottom: "8px" } }), SP_JSX.jsx("div", { style: { display: "flex", justifyContent: "center", marginBottom: "16px" }, children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => setShowPassword(!showPassword), children: showPassword ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(FaEyeSlash, {}), " ", t("wifi_hide_password")] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(FaEye, {}), " ", t("wifi_show_password")] }) }) }), isConnecting && SP_JSX.jsx("div", { style: { textAlign: "center", marginBottom: "16px" }, children: SP_JSX.jsx(DFL.Spinner, { style: { width: "45px", height: "45px" } }) }), error && SP_JSX.jsx("div", { style: { color: "#e74c3c", textAlign: "center", marginBottom: "16px" }, children: error }), SP_JSX.jsx("div", { style: { width: "100%", marginBottom: "8px" }, children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => onConnect(password), disabled: isConnecting, children: t("wifi_connect") }) }), SP_JSX.jsx("div", { style: { width: "100%" }, children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: onCancel, disabled: isConnecting, children: t("back") }) })] }) }));
+    return (SP_JSX.jsx(DFL.PanelSection, { title: `Connect to ${ssid}`, children: SP_JSX.jsxs("div", { style: { padding: "8px" }, children: [SP_JSX.jsx(DFL.TextField, { value: password, onChange: (e) => setPassword(e.target.value), bIsPassword: !showPassword, style: { width: "100%", marginBottom: "8px" } }), SP_JSX.jsx("div", { style: { display: "flex", justifyContent: "center", marginBottom: "16px" }, children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => setShowPassword(!showPassword), children: showPassword ? SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(FaEyeSlash, {}), " Hide Password"] }) : SP_JSX.jsxs(SP_JSX.Fragment, { children: [SP_JSX.jsx(FaEye, {}), " Show Password"] }) }) }), isConnecting && SP_JSX.jsx("div", { style: { textAlign: "center", marginBottom: "16px" }, children: SP_JSX.jsx(DFL.Spinner, { style: { width: "45px", height: "45px" } }) }), error && SP_JSX.jsx("div", { style: { color: "#e74c3c", textAlign: "center", marginBottom: "16px" }, children: error }), SP_JSX.jsx("div", { style: { width: "100%", marginBottom: "8px" }, children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => onConnect(password), disabled: isConnecting, children: "Connect" }) }), SP_JSX.jsx("div", { style: { width: "100%" }, children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: onCancel, disabled: isConnecting, children: "Cancel" }) })] }) }));
 };
 const WifiListView = ({ wifiEnabled, currentWifi, networks, scanning, connectingTo, connectError, onToggleWifi, onRefresh, onConnectClick, onConnectedClick }) => {
-    return (SP_JSX.jsxs(DFL.PanelSection, { title: t("wifi_title"), children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: t("wifi_toggle"), checked: wifiEnabled, onChange: onToggleWifi }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: onRefresh, children: t("wifi_refresh") }) }), currentWifi ? (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: onConnectedClick, children: SP_JSX.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }, children: [SP_JSX.jsxs("span", { children: [SP_JSX.jsx(FaCheck, { style: { marginRight: "8px" } }), currentWifi] }), SP_JSX.jsx(FaWifi, {})] }) }) })) : (SP_JSX.jsx("div", { style: { textAlign: "center", color: "#aaa", margin: "8px 0" }, children: t("wifi_no_connection") })), SP_JSX.jsx("h3", { style: { margin: "12px 0 0" }, children: t("wifi_available_networks") }), scanning ? (SP_JSX.jsx("div", { style: { textAlign: "center", margin: "10px 0" }, children: SP_JSX.jsx(DFL.Spinner, { style: { width: "45px", height: "45px" } }) })) : (networks.map(net => (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => onConnectClick(net.ssid, net.secured), disabled: connectingTo === net.ssid, children: SP_JSX.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }, children: [SP_JSX.jsx("span", { children: net.ssid }), SP_JSX.jsxs("div", { style: { display: "flex", gap: "8px" }, children: [net.secured && SP_JSX.jsx(FaLock, {}), SP_JSX.jsx(FaWifi, {})] })] }) }) }, net.ssid)))), connectError && SP_JSX.jsx("div", { style: { color: "#e74c3c", marginTop: "8px", textAlign: "center" }, children: connectError })] }));
+    return (SP_JSX.jsxs(DFL.PanelSection, { title: "Wi-Fi", children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: "Wi-Fi", checked: wifiEnabled, onChange: onToggleWifi }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: onRefresh, children: "Refresh" }) }), currentWifi ? (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: onConnectedClick, children: SP_JSX.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }, children: [SP_JSX.jsxs("span", { children: [SP_JSX.jsx(FaCheck, { style: { marginRight: "8px" } }), currentWifi] }), SP_JSX.jsx(FaWifi, {})] }) }) })) : (SP_JSX.jsx("div", { style: { textAlign: "center", color: "#aaa", margin: "8px 0" }, children: "No active connection" })), SP_JSX.jsx("h3", { style: { margin: "12px 0 0" }, children: "Available Networks" }), scanning ? (SP_JSX.jsx("div", { style: { textAlign: "center", margin: "10px 0" }, children: SP_JSX.jsx(DFL.Spinner, { style: { width: "45px", height: "45px" } }) })) : (networks.map(net => (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => onConnectClick(net.ssid, net.secured), disabled: connectingTo === net.ssid, children: SP_JSX.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }, children: [SP_JSX.jsx("span", { children: net.ssid }), SP_JSX.jsxs("div", { style: { display: "flex", gap: "8px" }, children: [net.secured && SP_JSX.jsx(FaLock, {}), SP_JSX.jsx(FaWifi, {})] })] }) }) }, net.ssid)))), connectError && SP_JSX.jsx("div", { style: { color: "#e74c3c", marginTop: "8px", textAlign: "center" }, children: connectError })] }));
 };
 const WifiView = () => {
     const [wifiEnabled, setWifiEnabled] = SP_REACT.useState(true);
@@ -1054,7 +769,7 @@ const WifiView = () => {
             setPasswordView(null);
         }
         else {
-            setConnectError(result.error === "wrong_password" ? t("wifi_wrong_password") : t("wifi_connection_failed"));
+            setConnectError(result.error === "wrong_password" ? "Wrong password" : "Connection failed");
         }
         setIsConnecting(false);
         setConnectingTo(null);
@@ -1070,7 +785,7 @@ const WifiView = () => {
     };
     const openConnectedDialog = () => {
         if (currentWifi) {
-            alert(`${t("wifi_connected")} ${currentWifi}\nMAC: XX:XX:XX:XX:XX:XX\nIP: 192.168.1.100`);
+            alert(`Connected to ${currentWifi}\nMAC: XX:XX:XX:XX:XX:XX\nIP: 192.168.1.100`);
         }
     };
     if (passwordView) {
@@ -1078,19 +793,11 @@ const WifiView = () => {
     }
     return (SP_JSX.jsx(WifiListView, { wifiEnabled: wifiEnabled, currentWifi: currentWifi, networks: networks, scanning: scanning, connectingTo: connectingTo, connectError: connectError, onToggleWifi: handleToggleWifi, onRefresh: handleRefresh, onConnectClick: handleConnectClick, onConnectedClick: openConnectedDialog }));
 };
-// ---------- Bluetooth View (temporarily disabled - coming soon) ----------
-const BluetoothView = () => {
-    return (SP_JSX.jsx(DFL.PanelSection, { title: t("bluetooth_title"), children: SP_JSX.jsx(DFL.Focusable, { focusWithinClassName: "gpfocuswithin", onActivate: () => { }, style: { width: "100%", margin: "4px 0" }, children: SP_JSX.jsxs("div", { style: {
-                    textAlign: "center",
-                    color: "#aaa",
-                    padding: "40px 20px",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "12px"
-                }, children: [SP_JSX.jsx(FaBluetooth, { size: 48, style: { opacity: 0.3 } }), SP_JSX.jsx("div", { style: { fontSize: "18px", fontWeight: "bold" }, children: t("placeholder_soon") }), SP_JSX.jsx("div", { style: { fontSize: "14px", opacity: 0.7 }, children: t("bluetooth_placeholder") })] }) }) }));
+// ---------- Bluetooth Placeholder ----------
+const BluetoothPlaceholder = () => {
+    return (SP_JSX.jsx(DFL.PanelSection, { title: "Bluetooth", children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("div", { style: { textAlign: "center", color: "#aaa", padding: "20px" }, children: "Bluetooth is going to be implemented in a future update. Sorry!" }) }) }));
 };
-// ---------- Compatibility Components ----------
+// ---------- Compatibility Detail View (full page, like password view) ----------
 const CompatibilityDetailView = ({ game, onBack }) => {
     const sections = [
         { key: "rating", label: t("compatibility_rating") }, { key: "switch_model", label: t("switch_model") },
@@ -1111,7 +818,7 @@ const CompatibilityDetailView = ({ game, onBack }) => {
                         fontFamily: isCode ? "monospace" : "inherit",
                         whiteSpace: isCode ? "pre-wrap" : "normal",
                         wordBreak: "break-word",
-                    }, children: content }) }), isCode && (SP_JSX.jsx("div", { style: { marginTop: "4px" }, children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => copyToClipboard(content), children: t("copy_to_clipboard") }) }))] }));
+                    }, children: content }) }), isCode && (SP_JSX.jsx("div", { style: { marginTop: "4px" }, children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => copyToClipboard(content), children: "Copy" }) }))] }));
     return (SP_JSX.jsxs(DFL.PanelSection, { title: game.name, children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs(DFL.ButtonItem, { layout: "below", onClick: onBack, children: [SP_JSX.jsx(FaArrowLeft, {}), " ", t("back")] }) }), SP_JSX.jsx(Scrollable, { style: { height: "calc(100vh - 80px)", padding: "0 8px" }, children: sections.map(section => {
                     const value = game[section.key];
                     if (!value)
@@ -1119,16 +826,17 @@ const CompatibilityDetailView = ({ game, onBack }) => {
                     return renderTextBlock(section.label, section.key === "rating" ? translateRating(value) : value, section.key === "launch_options");
                 }) })] }));
 };
+// ---------- Compatibility List View (long scrollable list, no pagination) ----------
 const CompatibilityListView = ({ compatGames, compatLoading, iconUrls, searchInput, setSearchInput, setShowFiltersView, showInstalledOnly, setShowInstalledOnly, onGameSelected, error }) => {
     const filteredGames = compatGames.filter(game => {
         if (!game.name.toLowerCase().includes(searchInput.toLowerCase()))
             return false;
         return true;
     });
-    return (SP_JSX.jsxs(DFL.PanelSection, { title: t("compatibility_title"), children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => setShowFiltersView(true), children: t("filters") }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.TextField, { label: t("search_games"), value: searchInput, onChange: (e) => setSearchInput(e.target.value), style: { width: "100%" } }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: t("show_installed_only"), checked: showInstalledOnly, onChange: () => setShowInstalledOnly(!showInstalledOnly) }) }), compatLoading ? (SP_JSX.jsx("div", { style: { textAlign: "center", marginTop: "20px" }, children: SP_JSX.jsx(DFL.Spinner, { style: { width: "45px", height: "45px" } }) })) : error ? (SP_JSX.jsx("div", { style: { textAlign: "center", color: "#e74c3c", padding: "20px" }, children: error })) : filteredGames.length === 0 ? (SP_JSX.jsx("div", { style: { textAlign: "center", color: "#aaa", padding: "20px" }, children: t("no_games_found") })) : (SP_JSX.jsx(Scrollable, { style: { height: "calc(100vh - 80px)", padding: "0 8px" }, children: filteredGames.map((game) => (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => onGameSelected(game), children: SP_JSX.jsxs("div", { style: { display: "flex", alignItems: "center", gap: "8px", width: "100%" }, children: [iconUrls[game.rating.toLowerCase()] && (SP_JSX.jsx("img", { src: iconUrls[game.rating.toLowerCase()], style: { width: "24px", height: "24px", flexShrink: 0 }, alt: game.rating })), SP_JSX.jsx("span", { style: { flex: 1, textAlign: "left" }, children: game.name })] }) }) }, game.name))) }))] }));
+    return (SP_JSX.jsxs(DFL.PanelSection, { title: t("tab_compatibility"), children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => setShowFiltersView(true), children: t("filters") }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.TextField, { label: t("search_games"), value: searchInput, onChange: (e) => setSearchInput(e.target.value), style: { width: "100%" } }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: "Show only installed games", checked: showInstalledOnly, onChange: () => setShowInstalledOnly(!showInstalledOnly) }) }), compatLoading ? (SP_JSX.jsx("div", { style: { textAlign: "center", marginTop: "20px" }, children: SP_JSX.jsx(DFL.Spinner, { style: { width: "45px", height: "45px" } }) })) : error ? (SP_JSX.jsx("div", { style: { textAlign: "center", color: "#e74c3c", padding: "20px" }, children: error })) : filteredGames.length === 0 ? (SP_JSX.jsx("div", { style: { textAlign: "center", color: "#aaa", padding: "20px" }, children: "No games found" })) : (SP_JSX.jsx(Scrollable, { style: { height: "calc(100vh - 80px)", padding: "0 8px" }, children: filteredGames.map((game) => (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: () => onGameSelected(game), children: SP_JSX.jsxs("div", { style: { display: "flex", alignItems: "center", gap: "8px", width: "100%" }, children: [iconUrls[game.rating.toLowerCase()] && SP_JSX.jsx("img", { src: iconUrls[game.rating.toLowerCase()], style: { width: "24px", height: "24px" }, alt: game.rating }), SP_JSX.jsx("span", { style: { flex: 1 }, children: game.name }), SP_JSX.jsx("span", { style: { fontSize: "12px", opacity: 0.7 }, children: translateRating(game.rating) })] }) }) }, game.name))) }))] }));
 };
-const FiltersView = ({ setShowFiltersView, allSwitchModels, selectedSwitchModels, toggleSwitchModel, allOcModes, selectedOcModes, toggleOcMode, allRatings, selectedRatings, toggleRating, handleSync, syncing }) => (SP_JSX.jsxs(DFL.PanelSection, { title: t("game_filters"), children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs(DFL.ButtonItem, { layout: "below", onClick: () => setShowFiltersView(false), children: [SP_JSX.jsx(FaArrowLeft, {}), " ", t("back")] }) }), SP_JSX.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "12px", padding: "8px" }, children: [SP_JSX.jsx("h3", { children: t("switch_model_filter") }), allSwitchModels.map(model => (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: model, checked: selectedSwitchModels.includes(model), onChange: () => toggleSwitchModel(model) }) }, model))), SP_JSX.jsx("h3", { children: t("oc_mode_filter_label") }), allOcModes.map(mode => (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: mode, checked: selectedOcModes.includes(mode), onChange: () => toggleOcMode(mode) }) }, mode))), SP_JSX.jsx("h3", { children: t("rating_filter_label") }), allRatings.map(rating => (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: rating, checked: selectedRatings.includes(rating), onChange: () => toggleRating(rating) }) }, rating))), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: handleSync, disabled: syncing, children: syncing ? t("syncing") : t("sync") }) })] })] }));
-// ---------- Main SettingsPage ----------
+const FiltersView = ({ setShowFiltersView, allSwitchModels, selectedSwitchModels, toggleSwitchModel, allOcModes, selectedOcModes, toggleOcMode, allRatings, selectedRatings, toggleRating, handleSync, syncing }) => (SP_JSX.jsxs(DFL.PanelSection, { title: t("game_filters"), children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs(DFL.ButtonItem, { layout: "below", onClick: () => setShowFiltersView(false), children: [SP_JSX.jsx(FaArrowLeft, {}), " ", t("back")] }) }), SP_JSX.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "12px", padding: "8px" }, children: [SP_JSX.jsx("h3", { children: t("switch_model") }), allSwitchModels.map(model => (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: model, checked: selectedSwitchModels.includes(model), onChange: () => toggleSwitchModel(model) }) }, model))), SP_JSX.jsx("h3", { children: t("oc_mode_filter") }), allOcModes.map(mode => (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: mode, checked: selectedOcModes.includes(mode), onChange: () => toggleOcMode(mode) }) }, mode))), SP_JSX.jsx("h3", { children: t("rating_filter") }), allRatings.map(rating => (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: rating, checked: selectedRatings.includes(rating), onChange: () => toggleRating(rating) }) }, rating))), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: handleSync, disabled: syncing, children: syncing ? t("syncing") : t("sync") }) })] })] }));
+// ---------- Main SettingsPage (SidebarNavigation) ----------
 const SettingsPage = () => {
     const [compatGames, setCompatGames] = SP_REACT.useState([]);
     const [compatLoading, setCompatLoading] = SP_REACT.useState(true);
@@ -1151,10 +859,12 @@ const SettingsPage = () => {
     const isFirstLoad = SP_REACT.useRef(true);
     const allSwitchModels = ["Switch Lite", "Switch OLED", "Switch V1", "Switch V2"];
     const allOcModes = ["Console", "Handheld", "OC CPU", "OC GPU", "OC All", "Perf OC", "Perf OC All"];
-    const allRatings = ["Perfect", "Playable", "Unplayable", "Unsupported", "Unknown"];
+    const allRatings = ["Perfect", "Playable", "Unsupported", "Unknown"];
+    // Load installed games
     SP_REACT.useEffect(() => {
         getInstalledGames().then(setInstalledGames).catch(e => console.error(e));
     }, []);
+    // Load/save filters (default all ON)
     SP_REACT.useEffect(() => {
         const loadFilters = async () => {
             const [swStr, ocStr, rtStr] = await Promise.all([
@@ -1177,7 +887,7 @@ const SettingsPage = () => {
     const toggleOcMode = (mode) => { setSelectedOcModes(prev => prev.includes(mode) ? prev.filter(m => m !== mode) : [...prev, mode]); };
     const toggleRating = (rating) => { setSelectedRatings(prev => prev.includes(rating) ? prev.filter(r => r !== rating) : [...prev, rating]); };
     SP_REACT.useEffect(() => {
-        const statuses = ["perfect", "playable", "unplayable", "unsupported", "unknown"];
+        const statuses = ["perfect", "playable", "unsupported", "unknown"];
         statuses.forEach(async (s) => {
             const url = await getIconBase64(s);
             setIconUrls(prev => ({ ...prev, [s]: url }));
@@ -1249,8 +959,8 @@ const SettingsPage = () => {
     }
     const pages = [
         { title: t("tab_system"), content: SP_JSX.jsx(SystemView, {}), icon: SP_JSX.jsx(FaMicrochip, {}), route: "/nintendeck-settings/system" },
-        { title: t("tab_wifi"), content: SP_JSX.jsx(WifiView, {}), icon: SP_JSX.jsx(FaWifi, {}), route: "/nintendeck-settings/wifi" },
-        { title: t("tab_bluetooth"), content: SP_JSX.jsx(BluetoothView, {}), icon: SP_JSX.jsx(FaBluetooth, {}), route: "/nintendeck-settings/bluetooth" },
+        { title: "Wi-Fi", content: SP_JSX.jsx(WifiView, {}), icon: SP_JSX.jsx(FaWifi, {}), route: "/nintendeck-settings/wifi" },
+        { title: "Bluetooth", content: SP_JSX.jsx(BluetoothPlaceholder, {}), icon: SP_JSX.jsx(FaBluetooth, {}), route: "/nintendeck-settings/bluetooth" },
         { title: t("tab_tdp"), content: SP_JSX.jsx(TdpView, {}), icon: SP_JSX.jsx(FaPlug, {}), route: "/nintendeck-settings/tdp" },
         { title: t("tab_utilities"), content: SP_JSX.jsx(UtilitiesView, { confirmHekate: confirmHekate, setConfirmHekate: setConfirmHekate, hekateTimeout: hekateTimeout, confirmDesktop: confirmDesktop, setConfirmDesktop: setConfirmDesktop, desktopTimeout: desktopTimeout }), icon: SP_JSX.jsx(FaWrench, {}), route: "/nintendeck-settings/utilities" },
         { title: t("tab_compatibility"), content: compatibilityContent, icon: SP_JSX.jsx(FaQuestionCircle, {}), route: "/nintendeck-settings/compatibility" },
@@ -1274,8 +984,7 @@ const SettingsPage = () => {
 };
 // ---------- Plugin definition ----------
 var index = definePlugin(() => {
-    const lang = detectLanguage();
-    setLanguage(lang);
+    detectLanguage().then(lang => setLanguage(lang));
     routerHook.addRoute("/nintendeck-settings", SettingsPage);
     console.log(`[NintenDeck] Route /nintendeck-settings registered`);
     return {

@@ -1,0 +1,8 @@
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.policykit.exec") {
+        var program = action.lookup("program");
+        if (program == "/usr/bin/reboot-hekate") {
+            return polkit.Result.YES;
+        }
+    }
+});
