@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=NintenDeck Installer
+Comment=nintendeck installer
+Exec=/usr/bin/install-deck.sh
+Icon=deck-installer.png
+Terminal=false
+Type=Application

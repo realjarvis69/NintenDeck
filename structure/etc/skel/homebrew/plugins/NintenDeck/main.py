@@ -16,11 +16,16 @@ class Plugin:
         self.latest_line = ""
         self.lock = asyncio.Lock()
         self.runtime_dir = f"/run/user/{os.getuid()}"
-        self.csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXdwrjkDeIWCDMEyFhKGKrkTBTMqS1C0hkfG2rsctXGxGtry-H-S-K3hzUcmqHDiXa9wV4NT5cGtgA/pub?gid=1002118274&single=true&output=csv"
+        self.csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTw6ZTmWBZ9G9-to_9GT763UzFVmuRdu5PCH-WSa4ui9tSeWGS0o_eJQHs8VyoGcy5DXm569xCW3Ybu/pub?gid=1002118274&single=true&output=csv"
         self.config_dir = Path.home() / ".config" / "NintenDeck"
         self.config_dir.mkdir(parents=True, exist_ok=True)
         self.cache_file = self.config_dir / "compatibility.csv"
-        decky.logger.info("Plugin initialised (offline CSV, 1s temps, Bluetooth fixed)")
+        # Bluetooth streaming
+        self.bluetooth_scan_process = None
+        self.bluetooth_scan_task = None
+        self.discovered_devices = []
+        self.bluetooth_lock = asyncio.Lock()
+        decky.logger.info("Plugin initialised (offline CSV, 1s temps, Bluetooth streaming)")
 
     # ---------- Helper: check internet ----------
     async def is_online(self) -> bool:
@@ -60,11 +65,12 @@ class Plugin:
         for row in reader:
             if not row.get('Game'):
                 continue
+            rating = row.get('Rating', 'Unknown')
             games.append({
                 "name": row.get('Game', ''),
                 "switch_model": row.get('Switch Model', ''),
                 "oc_mode": row.get('OC Mode', ''),
-                "rating": row.get('Rating', 'Unknown'),
+                "rating": rating,
                 "avg_fps": row.get('Average FPS', ''),
                 "proton_version": row.get('Proton Version', ''),
                 "launch_options": row.get('Launch Options', ''),
@@ -207,7 +213,7 @@ class Plugin:
     # ---------- Run scripts ----------
     async def run_reboot_hekate(self) -> None:
         try:
-            subprocess.run(["reboot-hekate"], check=True, capture_output=True, text=True)
+            subprocess.run(["echo", "h"], check=True, capture_output=True, text=True)
             decky.logger.info("reboot-hekate executed")
         except Exception as e:
             decky.logger.error(f"reboot-hekate failed: {e}")
@@ -416,44 +422,256 @@ class Plugin:
                 decky.logger.error(f"Failed to set DBus env: {e}")
         return env
 
-    # ---------- Bluetooth (simple 15‑second scan, fixed pairing) ----------
-    async def scan_bluetooth_devices(self):
-        decky.logger.info("[BT] Starting 15-second scan")
+    # ---------- Bluetooth with proper power management ----------
+    async def get_bluetooth_powered(self) -> bool:
+        """Check if Bluetooth is powered on via bluetoothctl show."""
         try:
-            subprocess.run(["bluetoothctl", "power", "on"], capture_output=True, timeout=5)
-            result = subprocess.run(
-                ["bluetoothctl", "--timeout", "15", "scan", "on"],
-                capture_output=True, text=True, timeout=20
+            result = subprocess.run(["bluetoothctl", "show"], capture_output=True, text=True, timeout=5)
+            powered = "Powered: yes" in result.stdout
+            decky.logger.info(f"[BT] Powered state: {powered}")
+            return powered
+        except Exception as e:
+            decky.logger.error(f"[BT] get_bluetooth_powered error: {e}")
+            return False
+
+    async def set_bluetooth_power(self, on: bool) -> bool:
+        """Set Bluetooth power state."""
+        try:
+            cmd = "on" if on else "off"
+            result = subprocess.run(["bluetoothctl", "power", cmd], capture_output=True, text=True, timeout=5)
+            decky.logger.info(f"[BT] Power {cmd} result: returncode={result.returncode}, stdout='{result.stdout.strip()}', stderr='{result.stderr.strip()}'")
+            return result.returncode == 0
+        except Exception as e:
+            decky.logger.error(f"[BT] set_bluetooth_power error: {e}")
+            return False
+
+    async def ensure_bluetooth_powered(self) -> bool:
+        """Ensure Bluetooth is powered on, handling the NotReady error."""
+        decky.logger.info("[BT] Ensuring Bluetooth is powered on")
+        try:
+            # First, try to get the current state
+            powered = await self.get_bluetooth_powered()
+            if powered:
+                decky.logger.info("[BT] Bluetooth already powered on")
+                return True
+
+            # If not powered, try to power on
+            decky.logger.info("[BT] Bluetooth not powered, attempting to power on")
+
+            # Try power on with a small delay to let the adapter initialize
+            for attempt in range(3):
+                success = await self.set_bluetooth_power(True)
+                if success:
+                    await asyncio.sleep(0.5)
+                    # Verify it's actually powered on
+                    powered = await self.get_bluetooth_powered()
+                    if powered:
+                        decky.logger.info(f"[BT] Bluetooth powered on successfully (attempt {attempt + 1})")
+                        return True
+                decky.logger.warning(f"[BT] Power on attempt {attempt + 1} failed, retrying...")
+                await asyncio.sleep(0.5)
+
+            # If we still can't power on, try a reset
+            decky.logger.info("[BT] Trying Bluetooth reset...")
+            await self.set_bluetooth_power(False)
+            await asyncio.sleep(0.5)
+            await self.set_bluetooth_power(True)
+            await asyncio.sleep(0.5)
+            powered = await self.get_bluetooth_powered()
+            if powered:
+                decky.logger.info("[BT] Bluetooth powered on after reset")
+                return True
+
+            decky.logger.error("[BT] Failed to power on Bluetooth after multiple attempts")
+            return False
+        except Exception as e:
+            decky.logger.error(f"[BT] ensure_bluetooth_powered error: {e}")
+            return False
+
+    async def start_bluetooth_scan(self):
+        """Start streaming Bluetooth scan using --timeout 15."""
+        decky.logger.info("[BT] ========== START SCAN ==========")
+        async with self.bluetooth_lock:
+            if self.bluetooth_scan_task is not None:
+                decky.logger.info("[BT] Scan already running, returning")
+                return
+
+            # Ensure Bluetooth is powered on first
+            if not await self.ensure_bluetooth_powered():
+                decky.logger.error("[BT] Cannot start scan - Bluetooth failed to power on")
+                return
+
+            # Clear discovered devices list
+            self.discovered_devices = []
+            decky.logger.info("[BT] Starting scan subprocess: bluetoothctl --timeout 15 scan on")
+            self.bluetooth_scan_process = await asyncio.create_subprocess_exec(
+                "bluetoothctl", "--timeout", "15", "scan", "on",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
             )
-            decky.logger.info("[BT] Scan completed, processing results")
-            devices_result = subprocess.run(["bluetoothctl", "devices"], capture_output=True, text=True, timeout=5)
+            decky.logger.info(f"[BT] Scan process started with PID: {self.bluetooth_scan_process.pid if self.bluetooth_scan_process else 'None'}")
+            self.bluetooth_scan_task = asyncio.create_task(self._read_bluetooth_scan_output())
+            decky.logger.info("[BT] Scan task created, waiting for output")
+
+    async def _read_bluetooth_scan_output(self):
+        """Read lines from the scan process as they arrive (incremental)."""
+        decky.logger.info("[BT] _read_bluetooth_scan_output task started")
+        seen_macs = set()
+        line_count = 0
+        raw_output_lines = []
+
+        while self.bluetooth_scan_process:
+            try:
+                line = await self.bluetooth_scan_process.stdout.readline()
+                if not line:
+                    decky.logger.info("[BT] stdout EOF, scan process finished")
+                    break
+                line_count += 1
+                line_str = line.decode().strip()
+                raw_output_lines.append(line_str)
+                decky.logger.info(f"[BT] RAW LINE {line_count}: {line_str}")
+
+                # Clean ANSI escape codes
+                clean_line = re.sub(r'\x1b\[[0-9;]*m', '', line_str)
+                decky.logger.info(f"[BT] CLEAN LINE: {clean_line}")
+
+                # Process lines that contain "[NEW] Device" or "Device"
+                if "[NEW] Device" in clean_line or clean_line.startswith("Device"):
+                    decky.logger.info(f"[BT] Found device line: {clean_line}")
+
+                    # Remove "[NEW]" prefix if present
+                    clean_line_no_new = clean_line.replace("[NEW]", "").strip()
+                    # Split into parts: "Device", "MAC", "Name"
+                    parts = clean_line_no_new.split(" ", 2)
+
+                    if len(parts) >= 3:
+                        mac = parts[1]  # This is the MAC address
+                        name = parts[2]  # This is the device name
+                        decky.logger.info(f"[BT] Parsed: MAC={mac}, Name={name}")
+
+                        if mac not in seen_macs:
+                            seen_macs.add(mac)
+                            # Get device status - check if already paired/trusted
+                            info = subprocess.run(["bluetoothctl", "info", mac], capture_output=True, text=True, timeout=3)
+                            paired = "Paired: yes" in info.stdout
+                            connected = "Connected: yes" in info.stdout
+                            trusted = "Trusted: yes" in info.stdout
+                            device = {
+                                "mac": mac,
+                                "name": name,
+                                "paired": paired,
+                                "connected": connected,
+                                "trusted": trusted
+                            }
+                            self.discovered_devices.append(device)
+                            decky.logger.info(f"[BT] Added device: {device}")
+                        else:
+                            decky.logger.info(f"[BT] Duplicate device: {mac}")
+                    else:
+                        decky.logger.info(f"[BT] Could not parse line: {clean_line}")
+            except Exception as e:
+                decky.logger.error(f"[BT] Error reading scan: {e}")
+                break
+
+        # Log all raw output at the end for debugging
+        decky.logger.info(f"[BT] Total lines read: {line_count}")
+        if raw_output_lines:
+            decky.logger.info(f"[BT] Full raw output:\n" + "\n".join(raw_output_lines))
+        else:
+            decky.logger.warning("[BT] No output received from bluetoothctl scan")
+
+        decky.logger.info(f"[BT] Scan completed, discovered {len(self.discovered_devices)} devices")
+        self.bluetooth_scan_process = None
+        self.bluetooth_scan_task = None
+        decky.logger.info("[BT] ========== SCAN END ==========")
+
+    async def stop_bluetooth_scan(self):
+        """Stop the scan (don't power off)."""
+        decky.logger.info("[BT] stop_bluetooth_scan called")
+        async with self.bluetooth_lock:
+            if self.bluetooth_scan_process:
+                decky.logger.info("[BT] Terminating scan process")
+                self.bluetooth_scan_process.terminate()
+                await self.bluetooth_scan_process.wait()
+                self.bluetooth_scan_process = None
+            if self.bluetooth_scan_task:
+                decky.logger.info("[BT] Cancelling read task")
+                self.bluetooth_scan_task.cancel()
+                self.bluetooth_scan_task = None
+            decky.logger.info("[BT] Scan stopped (power remains on)")
+
+    async def get_discovered_devices(self):
+        """Return current list of discovered devices (incremental)."""
+        async with self.bluetooth_lock:
+            device_count = len(self.discovered_devices)
+            decky.logger.info(f"[BT] get_discovered_devices returning {device_count} devices")
+            return list(self.discovered_devices)
+
+    async def get_paired_devices(self):
+        """Return paired devices (using Trusted devices)."""
+        decky.logger.info("[BT] get_paired_devices called")
+        try:
+            # Use "devices Trusted" to get trusted/paired devices
+            result = subprocess.run(["bluetoothctl", "devices", "Trusted"], capture_output=True, text=True, timeout=5)
+            decky.logger.info(f"[BT] Trusted devices command: returncode={result.returncode}, stdout='{result.stdout.strip()}'")
+
+            # Also check regular paired devices as fallback
+            paired_result = subprocess.run(["bluetoothctl", "devices", "Paired"], capture_output=True, text=True, timeout=5)
+            decky.logger.info(f"[BT] Paired devices command: returncode={paired_result.returncode}, stdout='{paired_result.stdout.strip()}'")
+
             devices = []
-            for line in devices_result.stdout.split('\n'):
+            processed_macs = set()
+
+            # Process Trusted devices first
+            for line in result.stdout.split('\n'):
                 if line.startswith("Device"):
                     parts = line.split(" ", 2)
                     if len(parts) >= 3:
                         mac = parts[1]
                         name = parts[2]
-                        info = subprocess.run(["bluetoothctl", "info", mac], capture_output=True, text=True, timeout=3)
-                        paired = "Paired: yes" in info.stdout
-                        connected = "Connected: yes" in info.stdout
-                        trusted = "Trusted: yes" in info.stdout
-                        devices.append({
-                            "mac": mac,
-                            "name": name,
-                            "paired": paired,
-                            "connected": connected,
-                            "trusted": trusted
-                        })
-            decky.logger.info(f"[BT] Found {len(devices)} devices")
+                        if mac not in processed_macs:
+                            processed_macs.add(mac)
+                            info = subprocess.run(["bluetoothctl", "info", mac], capture_output=True, text=True, timeout=3)
+                            connected = "Connected: yes" in info.stdout
+                            devices.append({
+                                "mac": mac,
+                                "name": name,
+                                "paired": True,
+                                "connected": connected
+                            })
+                            decky.logger.info(f"[BT] Trusted device: {name} ({mac}), connected={connected}")
+
+            # Then process Paired devices that weren't already found
+            for line in paired_result.stdout.split('\n'):
+                if line.startswith("Device"):
+                    parts = line.split(" ", 2)
+                    if len(parts) >= 3:
+                        mac = parts[1]
+                        name = parts[2]
+                        if mac not in processed_macs:
+                            processed_macs.add(mac)
+                            info = subprocess.run(["bluetoothctl", "info", mac], capture_output=True, text=True, timeout=3)
+                            connected = "Connected: yes" in info.stdout
+                            devices.append({
+                                "mac": mac,
+                                "name": name,
+                                "paired": True,
+                                "connected": connected
+                            })
+                            decky.logger.info(f"[BT] Paired device: {name} ({mac}), connected={connected}")
+
+            decky.logger.info(f"[BT] Found {len(devices)} trusted/paired devices")
             return devices
         except Exception as e:
-            decky.logger.error(f"[BT] scan_bluetooth_devices error: {e}")
+            decky.logger.error(f"[BT] get_paired_devices error: {e}")
             return []
 
-    async def get_paired_devices(self):
+    async def get_connected_devices(self):
+        """Return currently connected devices."""
+        decky.logger.info("[BT] get_connected_devices called")
         try:
-            result = subprocess.run(["bluetoothctl", "devices"], capture_output=True, text=True, timeout=5)
+            result = subprocess.run(["bluetoothctl", "devices", "Connected"], capture_output=True, text=True, timeout=5)
+            decky.logger.info(f"[BT] Connected devices command: returncode={result.returncode}, stdout='{result.stdout.strip()}'")
             devices = []
             for line in result.stdout.split('\n'):
                 if line.startswith("Device"):
@@ -461,86 +679,124 @@ class Plugin:
                     if len(parts) >= 3:
                         mac = parts[1]
                         name = parts[2]
-                        info = subprocess.run(["bluetoothctl", "info", mac], capture_output=True, text=True, timeout=3)
-                        if "Paired: yes" in info.stdout:
-                            devices.append({
-                                "mac": mac,
-                                "name": name,
-                                "paired": True,
-                                "connected": "Connected: yes" in info.stdout,
-                                "trusted": "Trusted: yes" in info.stdout
-                            })
+                        devices.append({
+                            "mac": mac,
+                            "name": name,
+                            "connected": True
+                        })
+                        decky.logger.info(f"[BT] Connected device: {name} ({mac})")
+            decky.logger.info(f"[BT] Found {len(devices)} connected devices")
             return devices
         except Exception as e:
-            decky.logger.error(f"[BT] get_paired_devices error: {e}")
+            decky.logger.error(f"[BT] get_connected_devices error: {e}")
             return []
 
     async def get_bluetooth_status(self):
+        """Return enabled status (persistent)."""
+        decky.logger.info("[BT] get_bluetooth_status called")
         try:
-            power = subprocess.run(["bluetoothctl", "show"], capture_output=True, text=True, timeout=5)
-            enabled = "Powered: yes" in power.stdout
-            devices = subprocess.run(["bluetoothctl", "devices"], capture_output=True, text=True, timeout=5)
-            connected = []
-            for line in devices.stdout.split('\n'):
-                if line.startswith("Device"):
-                    parts = line.split(" ", 2)
-                    if len(parts) >= 3:
-                        mac = parts[1]
-                        info = subprocess.run(["bluetoothctl", "info", mac], capture_output=True, text=True, timeout=3)
-                        if "Connected: yes" in info.stdout:
-                            connected.append({"mac": mac, "name": parts[2]})
-            return {"enabled": enabled, "connected_devices": connected}
+            powered = await self.get_bluetooth_powered()
+            decky.logger.info(f"[BT] Bluetooth powered: {powered}")
+            return {"enabled": powered}
         except Exception as e:
             decky.logger.error(f"[BT] get_bluetooth_status error: {e}")
-            return {"enabled": False, "connected_devices": []}
+            return {"enabled": False}
 
     async def toggle_bluetooth(self):
+        """Toggle Bluetooth power state with proper error handling."""
         decky.logger.info("[BT] Toggle called")
         try:
-            status = await self.get_bluetooth_status()
-            if status["enabled"]:
-                subprocess.run(["bluetoothctl", "power", "off"], capture_output=True, timeout=5)
-                decky.logger.info("[BT] Powered off")
+            # First, try to get the current state
+            try:
+                powered = await self.get_bluetooth_powered()
+            except Exception as e:
+                decky.logger.error(f"[BT] Error getting powered state: {e}")
+                powered = False
+
+            if powered:
+                decky.logger.info("[BT] Toggling OFF")
+                await self.stop_bluetooth_scan()
+                await self.set_bluetooth_power(False)
+                # Verify it turned off
+                await asyncio.sleep(0.5)
+                powered = await self.get_bluetooth_powered()
+                if powered:
+                    decky.logger.warning("[BT] Bluetooth didn't turn off, trying again")
+                    await self.set_bluetooth_power(False)
+                decky.logger.info("[BT] Powered OFF")
             else:
-                subprocess.run(["bluetoothctl", "power", "on"], capture_output=True, timeout=5)
-                decky.logger.info("[BT] Powered on")
+                decky.logger.info("[BT] Toggling ON")
+                # Ensure Bluetooth powers on properly
+                if await self.ensure_bluetooth_powered():
+                    decky.logger.info("[BT] Powered ON")
+                    # Start scan after power on
+                    await self.start_bluetooth_scan()
+                else:
+                    decky.logger.error("[BT] Failed to power on Bluetooth")
+                    return False
             return True
         except Exception as e:
             decky.logger.error(f"[BT] Toggle error: {e}")
             return False
 
-    async def pair_bluetooth(self, mac: str):
-        decky.logger.info(f"[BT] Pairing {mac}")
+    async def refresh_bluetooth(self):
+        """Refresh: power off, power on, then scan."""
+        decky.logger.info("[BT] Refresh called")
         try:
-            # Use NoAgent to avoid interactive prompts
-            result = subprocess.run(
-                ["bluetoothctl", "--agent", "NoAgent", "pair", mac],
-                capture_output=True, text=True, timeout=15
-            )
-            if result.returncode != 0:
-                decky.logger.error(f"[BT] Pair command failed: {result.stderr}")
+            # Stop current scan
+            await self.stop_bluetooth_scan()
+            # Power off
+            await self.set_bluetooth_power(False)
+            await asyncio.sleep(0.5)
+            # Power on using ensure method
+            if await self.ensure_bluetooth_powered():
+                # Start fresh scan
+                await self.start_bluetooth_scan()
+                return True
+            else:
+                decky.logger.error("[BT] Refresh failed - could not power on Bluetooth")
                 return False
-            # Verify pairing status
-            info = subprocess.run(["bluetoothctl", "info", mac], capture_output=True, text=True, timeout=3)
-            if "Paired: yes" not in info.stdout:
-                decky.logger.error(f"[BT] Pairing verification failed for {mac}")
-                return False
-            subprocess.run(["bluetoothctl", "trust", mac], capture_output=True, timeout=5)
-            decky.logger.info(f"[BT] Paired and trusted {mac}")
-            return True
         except Exception as e:
-            decky.logger.error(f"[BT] Pair error: {e}")
+            decky.logger.error(f"[BT] Refresh error: {e}")
             return False
 
     async def connect_bluetooth(self, mac: str):
+        """Connect to a device using trust (no pair)."""
         decky.logger.info(f"[BT] Connecting {mac}")
         try:
+            # Stop scan if running
+            await self.stop_bluetooth_scan()
+
+            # Ensure Bluetooth is powered on
+            if not await self.ensure_bluetooth_powered():
+                decky.logger.error("[BT] Cannot connect - Bluetooth failed to power on")
+                return False
+
+            await asyncio.sleep(0.5)
+
+            # Trust the device first (more reliable than pair)
+            decky.logger.info(f"[BT] Running: bluetoothctl trust {mac}")
+            trust_result = subprocess.run(["bluetoothctl", "trust", mac], capture_output=True, text=True, timeout=5)
+            decky.logger.info(f"[BT] Trust result: returncode={trust_result.returncode}, stdout='{trust_result.stdout.strip()}', stderr='{trust_result.stderr.strip()}'")
+
+            # Then connect
+            decky.logger.info(f"[BT] Running: bluetoothctl connect {mac}")
             result = subprocess.run(["bluetoothctl", "connect", mac], capture_output=True, text=True, timeout=10)
+            decky.logger.info(f"[BT] Connect result: returncode={result.returncode}, stdout='{result.stdout.strip()}', stderr='{result.stderr.strip()}'")
+
             success = result.returncode == 0
             if success:
                 decky.logger.info(f"[BT] Connected to {mac}")
             else:
-                decky.logger.error(f"[BT] Connect failed: {result.stderr}")
+                # Try one more time with a different approach
+                decky.logger.info(f"[BT] First connect attempt failed, trying again...")
+                await asyncio.sleep(0.5)
+                result = subprocess.run(["bluetoothctl", "connect", mac], capture_output=True, text=True, timeout=10)
+                success = result.returncode == 0
+                if success:
+                    decky.logger.info(f"[BT] Connected to {mac} on second attempt")
+                else:
+                    decky.logger.error(f"[BT] Connect failed: {result.stderr}")
             return success
         except Exception as e:
             decky.logger.error(f"[BT] Connect error: {e}")
@@ -550,6 +806,7 @@ class Plugin:
         decky.logger.info(f"[BT] Disconnecting {mac}")
         try:
             result = subprocess.run(["bluetoothctl", "disconnect", mac], capture_output=True, text=True, timeout=10)
+            decky.logger.info(f"[BT] Disconnect result: returncode={result.returncode}, stdout='{result.stdout.strip()}', stderr='{result.stderr.strip()}'")
             success = result.returncode == 0
             if success:
                 decky.logger.info(f"[BT] Disconnected from {mac}")
@@ -564,6 +821,7 @@ class Plugin:
         decky.logger.info(f"[BT] Forgetting {mac}")
         try:
             result = subprocess.run(["bluetoothctl", "remove", mac], capture_output=True, text=True, timeout=10)
+            decky.logger.info(f"[BT] Forget result: returncode={result.returncode}, stdout='{result.stdout.strip()}', stderr='{result.stderr.strip()}'")
             success = result.returncode == 0
             if success:
                 decky.logger.info(f"[BT] Forgotten {mac}")
@@ -574,13 +832,25 @@ class Plugin:
             decky.logger.error(f"[BT] Forget error: {e}")
             return False
 
+    async def pair_bluetooth(self, mac: str):
+        """Pair a device (kept for compatibility, but we prefer trust+connect)."""
+        decky.logger.info(f"[BT] Pairing {mac} (deprecated, use trust+connect)")
+        # Just trust and connect instead
+        return await self.connect_bluetooth(mac)
+
+    async def pair_and_connect_bluetooth(self, mac: str):
+        """Pair and connect a device using trust (no actual pair needed)."""
+        decky.logger.info(f"[BT] Connecting {mac} using trust method")
+        return await self.connect_bluetooth(mac)
+
     # ---------- Lifecycle ----------
     async def _main(self):
         import grp
         groups = [grp.getgrgid(g).gr_name for g in os.getgroups()]
         decky.logger.info(f"Plugin groups: {groups}")
-        decky.logger.info("NintenDeck plugin loaded (offline CSV, 1s temps, Bluetooth fixed)")
+        decky.logger.info("NintenDeck plugin loaded (offline CSV, 1s temps, Bluetooth streaming)")
 
     async def _unload(self):
         await self.stop_tegrastats()
+        await self.stop_bluetooth_scan()
         decky.logger.info("NintenDeck plugin unloaded")
