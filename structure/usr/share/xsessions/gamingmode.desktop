@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Gaming Mode
-Comment=Gaming Mode Launch
-Exec=/usr/bin/gamingmode
-TryExec=/usr/bin/gamingmode
-Icon=applications-games
-Type=Application

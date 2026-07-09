@@ -720,7 +720,7 @@ const setVolume = callable("set_volume");
 const getBrightness = callable("get_brightness");
 const getVolume = callable("get_volume");
 const runRebootHekate = callable("run_reboot_hekate");
-const runSwitchDesktop = callable("run_switch_desktop");
+callable("run_switch_desktop");
 const getCompatibilityData = callable("get_compatibility_data");
 const getInstalledGames = callable("get_installed_games");
 const getIconBase64 = callable("get_icon_base64");
@@ -959,7 +959,7 @@ const TdpView = () => {
         return SP_JSX.jsx("div", { children: t("loading") });
     return (SP_JSX.jsxs(DFL.PanelSection, { title: t("tab_tdp"), children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: { margin: "10px 0", padding: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", textAlign: "center" }, children: [SP_JSX.jsxs("div", { style: { display: "flex", justifyContent: "space-around", fontSize: "14px", fontWeight: "bold", marginBottom: "4px" }, children: [SP_JSX.jsx("span", { children: t("cpu") }), SP_JSX.jsx("span", { children: t("gpu") }), SP_JSX.jsx("span", { children: t("battery") })] }), SP_JSX.jsxs("div", { style: { display: "flex", justifyContent: "space-around", fontSize: "14px" }, children: [SP_JSX.jsxs("span", { children: [temps.cpu, "\u00B0C"] }), SP_JSX.jsxs("span", { children: [temps.gpu, "\u00B0C"] }), SP_JSX.jsxs("span", { children: [temps.battery, "\u00B0C"] })] })] }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `${t("tdp_mode")}: ${OC_NAMES[ocMode]}`, value: ocMode, min: 0, max: 6, step: 1, showValue: false, onChange: handleOcChange }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.SliderField, { label: `${t("fan_mode_label")}: ${FAN_NAMES[fanMode]}`, value: fanMode, min: 0, max: 2, step: 1, showValue: false, onChange: handleFanChange }) })] }));
 };
-const UtilitiesView = ({ confirmHekate, setConfirmHekate, hekateTimeout, confirmDesktop, setConfirmDesktop, desktopTimeout }) => {
+const UtilitiesView = ({ confirmHekate, setConfirmHekate, hekateTimeout }) => {
     const handleRebootHekateClick = () => {
         if (confirmHekate) {
             runRebootHekate().catch(e => console.error(e));
@@ -974,21 +974,7 @@ const UtilitiesView = ({ confirmHekate, setConfirmHekate, hekateTimeout, confirm
             hekateTimeout.current = setTimeout(() => setConfirmHekate(false), 3000);
         }
     };
-    const handleSwitchDesktopClick = () => {
-        if (confirmDesktop) {
-            runSwitchDesktop().catch(e => console.error(e));
-            setConfirmDesktop(false);
-            if (desktopTimeout.current)
-                clearTimeout(desktopTimeout.current);
-        }
-        else {
-            setConfirmDesktop(true);
-            if (desktopTimeout.current)
-                clearTimeout(desktopTimeout.current);
-            desktopTimeout.current = setTimeout(() => setConfirmDesktop(false), 3000);
-        }
-    };
-    return (SP_JSX.jsxs(DFL.PanelSection, { title: t("tab_utilities"), children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: handleRebootHekateClick, children: confirmHekate ? t("confirm") : t("reboot_hekate") }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: handleSwitchDesktopClick, children: confirmDesktop ? t("confirm") : t("switch_desktop") }) })] }));
+    return (SP_JSX.jsx(DFL.PanelSection, { title: t("tab_utilities"), children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { layout: "below", onClick: handleRebootHekateClick, children: confirmHekate ? t("confirm") : t("reboot_hekate") }) }) }));
 };
 // ---------- Wi-Fi Views ----------
 const WifiPasswordView = ({ ssid, onConnect, onCancel, isConnecting, error }) => {

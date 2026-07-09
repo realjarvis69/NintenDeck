@@ -40,6 +40,16 @@ check_wifi() {
     echo "$connected"
 }
 
+# Show error using kdialog (for early errors before Zenity is installed)
+show_early_error() {
+    local message="$1"
+    if command -v kdialog &>/dev/null; then
+        kdialog --error "$message" 2>/dev/null
+    else
+        echo "ERROR: $message"
+    fi
+}
+
 # ===== GUI HELPERS =====
 # Functions that use Zenity, fallback to kdialog if needed
 
@@ -180,7 +190,7 @@ keep_sudo_alive() {
 # Installs required system packages using dnf (skips if dnf not found)
 install_packages() {
     if ! command -v dnf &>/dev/null; then
-        show_warning "DNF not found. Skipping package installation.\n\nInstall manually if needed:\nbluez bluez-tools brightnessctl xbindkeys box64"
+        show_warning "DNF not found. Skipping package installation.\n\nInstall manually if needed:\ncurl xinput xdotool picom xbindkeys feh bluez bluez-tools brightnessctl box64"
         return 0
     fi
 
@@ -192,6 +202,49 @@ install_packages() {
     fi
 
     return 0
+}
+
+# ===== SDDM CONFIGURATION =====
+# Configures SDDM for autologin
+ensure_sddm_config() {
+    if [ ! -d "$SDDM_CONFIG_DIR" ]; then
+        echo "Creating SDDM config directory..."
+        sudo mkdir -p "$SDDM_CONFIG_DIR"
+    fi
+
+    if [ ! -f "$SDDM_CONFIG_FILE" ]; then
+        echo "Creating SDDM config file for user $CURRENT_USER..."
+        printf '[Autologin]\nUser=%s\nSession=%s\nRelogin=true\n' "$CURRENT_USER" "$KDE_SESSION" | \
+            sudo tee "$SDDM_CONFIG_FILE" > /dev/null
+    else
+        # Update User line using sudo sed
+        if grep -q "^User=" "$SDDM_CONFIG_FILE" 2>/dev/null; then
+            sudo sed -i "s/^User=.*/User=$CURRENT_USER/" "$SDDM_CONFIG_FILE"
+        else
+            sudo sed -i "/\[Autologin\]/a User=$CURRENT_USER" "$SDDM_CONFIG_FILE"
+        fi
+
+        # Update Session line to ensure KDE Plasma
+        if grep -q "^Session=" "$SDDM_CONFIG_FILE" 2>/dev/null; then
+            sudo sed -i "s/^Session=.*/Session=$KDE_SESSION/" "$SDDM_CONFIG_FILE"
+        else
+            sudo sed -i "/\[Autologin\]/a Session=$KDE_SESSION" "$SDDM_CONFIG_FILE"
+        fi
+    fi
+}
+
+# Sets the next session for reboot
+set_next_session() {
+    local session="$1"
+    ensure_sddm_config
+
+    if grep -q "^Session=" "$SDDM_CONFIG_FILE" 2>/dev/null; then
+        sudo sed -i "s/^Session=.*/Session=$session/" "$SDDM_CONFIG_FILE"
+    else
+        sudo sed -i "/\[Autologin\]/a Session=$session" "$SDDM_CONFIG_FILE"
+    fi
+
+    echo "Next session set to: $session for user $CURRENT_USER"
 }
 
 # ===== MOVE STEAM WINDOW TO TOP RIGHT =====
@@ -267,13 +320,13 @@ install_steam() {
             exit 1
         }
 
-        STEAMROOT="$HOME/.local/share/Steam"
         STEAMHOME="$HOME/.steam"
+        STEAMROOT="$HOME/.local/share/Steam"
         RTARM64ROOT="$STEAMROOT/steamrtarm64"
         DESKTOP_DIR=$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")
 
         # Remove conflicting native Steam packages
-        printf "\n[1/10] Checking for conflicting system packages...\n"
+        printf "\n[1/15] Checking for conflicting system packages...\n"
         if command -v apt-get &>/dev/null; then
             dpkg -l | grep -q "^ii  steam-launcher " && {
                 printf "Found conflicting system steam package. Uninstalling..\n"
@@ -292,7 +345,7 @@ install_steam() {
         fi
 
         # Clean up old Steam desktop shortcuts
-        printf "\n[2/10] Cleaning up old desktop shortcuts...\n"
+        printf "\n[2/15] Cleaning up old desktop shortcuts...\n"
         for file in "$HOME/.local/share/applications/Steam.desktop" \
                     "$HOME/.local/share/applications/steam.desktop" \
                     "/usr/local/share/applications/Steam.desktop" \
@@ -313,7 +366,7 @@ install_steam() {
         command -v update-desktop-database &>/dev/null && update-desktop-database "$HOME/.local/share/applications" &>/dev/null || true
 
         # Ask user if they want to delete existing Steam directories
-        printf "\n[3/10] Checking existing Steam installation...\n"
+        printf "\n[3/15] Checking existing Steam installation...\n"
         if [ -d "$STEAMROOT" ] || [ -d "$STEAMHOME" ]; then
             printf "Steam directories already exist.\n"
             if show_question "Steam directories already exist.\n\nA clean installation is recommended. Would you like to delete them now?\n\n⚠️ WARNING: This will remove all Steam data including games!"; then
@@ -343,7 +396,7 @@ install_steam() {
         fi
 
         # Download Steam bootstrap
-        printf "\n[4/10] Downloading Steam bootstrap...\n"
+        printf "\n[4/15] Downloading Steam bootstrap...\n"
         if [ ! -x "$RTARM64ROOT" ]; then
             mkdir -p "$STEAMROOT/package"
             rm -f "$STEAMROOT/package/beta"
@@ -356,7 +409,7 @@ install_steam() {
         fi
 
         # Download Steam runtime
-        printf "\n[5/10] Downloading Steam runtime...\n"
+        printf "\n[5/15] Downloading Steam runtime...\n"
         if [ ! -x "$RTARM64ROOT/pv-runtime/steam-runtime-steamrt-arm64" ]; then
             mkdir -p "$RTARM64ROOT/pv-runtime"
             wget -q --show-progress -c -t 5 -O "$RTARM64ROOT/pv-runtime/steam-runtime-steamrt-arm64.tar.xz" "https://repo.steampowered.com/steamrt3c/images/latest-public-beta/steam-runtime-steamrt-arm64.tar.xz" || exit_on_error "steam runtime download failed (check your internet connection)"
@@ -365,7 +418,7 @@ install_steam() {
         fi
 
         # Install DXVK-Sarek
-        printf "\n[6/10] Downloading DXVK-Sarek...\n"
+        printf "\n[6/15] Downloading DXVK-Sarek...\n"
         if [ ! -d "$STEAMROOT/Switchdeck/DXVK" ]; then
             mkdir -p "$STEAMROOT/Switchdeck/DXVK"
 
@@ -384,7 +437,7 @@ install_steam() {
         fi
 
         # Install VKD3D-Proton
-        printf "\n[7/10] Downloading VKD3D-Proton...\n"
+        printf "\n[7/15] Downloading VKD3D-Proton...\n"
         if [ ! -d "$STEAMROOT/Switchdeck/VKD3D" ]; then
             mkdir -p "$STEAMROOT/Switchdeck/VKD3D"
 
@@ -400,7 +453,7 @@ install_steam() {
         fi
 
         # Configure controller permissions
-        printf "\n[8/10] Configuring controller permissions...\n"
+        printf "\n[8/15] Configuring controller permissions...\n"
         CONTROLLER_RELOAD=0
         if command -v apt-get &>/dev/null; then
             dpkg -s steam-devices &>/dev/null || {
@@ -433,13 +486,13 @@ install_steam() {
             printf "Controller permissions applied successfully.\n"
         fi
 
-        # Run Steam initial update, then downgrade
-        printf "\n[9/10] Starting Steam update (this may take a while)...\n"
+        # Run Steam initial update
+        printf "\n[9/15] Starting Steam initial update (this may take a while)...\n"
         if [ -x "$RTARM64ROOT/steam" ]; then
             export LD_LIBRARY_PATH="$RTARM64ROOT:${LD_LIBRARY_PATH-}"
             "$RTARM64ROOT/steam" "$@" || true
 
-            printf "\nSteam exited. Downloading files to downgrade steam..\n"
+            printf "\n[10/15] Steam update complete. Downloading downgrade files...\n"
 
             TEMP_SD="$STEAMROOT/temp_sd"
             mkdir -p "$TEMP_SD"
@@ -451,6 +504,10 @@ install_steam() {
                 tar -xzf "$TEMP_SD/files/downgrade/linuxarm64.tar.gz" -C "$STEAMROOT/linuxarm64"
             fi
 
+            if [ -f "$TEMP_SD/files/downgrade/linux_x86_64.zip" ]; then
+                unzip -q -o "$TEMP_SD/files/downgrade/linux_x86_64.zip" -d "$STEAMROOT"
+            fi
+
             if [ -f "$TEMP_SD/files/downgrade/steamrtarm64.tar.gz.partaa" ]; then
                 mkdir -p "$STEAMROOT/steamrtarm64"
                 cat "$TEMP_SD/files/downgrade/steamrtarm64.tar.gz.part"* > "$TEMP_SD/steamrtarm64.tar.gz"
@@ -458,6 +515,7 @@ install_steam() {
                 rm -f "$TEMP_SD/steamrtarm64.tar.gz"
             fi
 
+            printf "\n[11/15] Applying downgrade files...\n"
             cp -f  "$TEMP_SD/files/downgrade/steam.cfg" "$STEAMROOT/steam.cfg"
             cp -f  "$TEMP_SD/files/steam/launch-steam.sh" "$STEAMROOT/"
             cp -f  "$TEMP_SD/files/steam/update-switchdeck.sh" "$STEAMROOT/"
@@ -466,98 +524,212 @@ install_steam() {
 
             chmod -R +x "$STEAMROOT"
 
-            # Generate desktop shortcuts
-            timeout 2s bash "$STEAMROOT/launch-steam.sh" 2>/dev/null || true
-            pkill -x "steam|steamwebhelper" >/dev/null 2>&1 || true
+            # Don't trigger old version migration on a fresh install
+            touch "$STEAMROOT/Switchdeck/.migration"
 
-            printf "\n[10/10] Steam installation complete!\n"
+            printf "\n[12/15] Setting up Steam symlinks...\n"
+            # Setup symlinks
+            ln -fsn "$STEAMROOT" "$STEAMHOME/root"
+            ln -fsn "$STEAMROOT" "$STEAMHOME/steam"
+            ln -fsn "$STEAMROOT/linux32" "$STEAMHOME/sdk32"
+            ln -fsn "$STEAMROOT/linux64" "$STEAMHOME/sdk64"
+            ln -fsn "$STEAMROOT/linuxarm64" "$STEAMHOME/sdkarm64"
+            ln -fsn "$STEAMROOT/ubuntu12_32" "$STEAMHOME/bin32"
+            ln -fsn "$STEAMROOT/ubuntu12_64" "$STEAMHOME/bin64"
+            ln -fsn "$STEAMHOME/bin32" "$STEAMHOME/bin"
+            ln -fsn "$STEAMROOT/steamrtarm64" "$STEAMROOT/steamrtarm32"
+
+            # Add steam to path
+            mkdir -p "$HOME/.local/bin"
+            ln -fsn "$STEAMROOT/launch-steam.sh" "$HOME/.local/bin/steam"
+
+            printf "\n[13/15] Creating desktop shortcuts...\n"
+            # Setup desktop path and icon
+            MENU_DIR="$HOME/.local/share/applications"
+            mkdir -p "$MENU_DIR"
+
+            DESKTOP_FILE="$MENU_DIR/steam.desktop"
+            cat > "$DESKTOP_FILE" <<EOF
+[Desktop Entry]
+Name=Steam
+Comment=Launch Steam
+Exec=$HOME/.local/bin/steam %U
+Icon=$STEAMROOT/public/steam_tray_48.tga
+Terminal=false
+Type=Application
+Categories=Game;
+MimeType=x-scheme-handler/steam;
+EOF
+
+            # Create KDE right-click menu for adding games to Steam
+            if [[ "${XDG_CURRENT_DESKTOP}" == *"KDE"* ]]; then
+                KDE_MENU_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/kio/servicemenus"
+                [ -d "$HOME/.local/share/kservices5" ] && KDE_MENU_DIR="$HOME/.local/share/kservices5/ServiceMenus"
+                mkdir -p "$KDE_MENU_DIR" "$STEAMROOT/Switchdeck"
+                cat << EOF > "$STEAMROOT/Switchdeck/switchdeck-add-game"
+#!/bin/sh
+TARGET_ITEM="\$1"
+[ -z "\$TARGET_ITEM" ] && exit 1
+if ! ps ax | grep -q 'steamrtarm64/[s]team'; then
+    kdialog --title Error --error "Require the Steam to be active."
+    exit 1
+fi
+encodedUrl="steam://addnonsteamgame/\$(python3 -c "import urllib.parse; print(urllib.parse.quote(\\"\$TARGET_ITEM\\", safe=''))")"
+touch /tmp/addnonsteamgamefile
+xdg-open \$encodedUrl
+bn=\$(basename "\$TARGET_ITEM")
+kdialog --passivepopup "\$bn has been added to Steam." 5
+EOF
+                cat > "$KDE_MENU_DIR/addtosteam.desktop" <<EOF
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=application/x-executable;application/x-desktop;
+Actions=addToSteam
+X-KDE-Priority=TopLevel
+Icon=$STEAMROOT/public/steam_tray_48.tga
+
+[Desktop Action addToSteam]
+Exec=$STEAMROOT/Switchdeck/switchdeck-add-game %f
+Icon=$STEAMROOT/public/steam_tray_48.tga
+Name=Add to Steam
+EOF
+                chmod +x "$STEAMROOT/Switchdeck/switchdeck-add-game" "$KDE_MENU_DIR/addtosteam.desktop"
+            fi
+
+            chmod +x "$DESKTOP_FILE"
+            ln -fs "$DESKTOP_FILE" "$DESKTOP_DIR/steam.desktop"
+            update-desktop-database "$MENU_DIR" 2>/dev/null
+
+            # Just to be safe
+            chmod -R +x "$STEAMROOT"
+
+            printf "\n[14/15] Steam installation complete!\n"
             printf "To launch Steam, use the provided desktop shortcuts\n"
             printf "or run launch-steam.sh in your Steam folder.\n\n"
             sleep 3
         fi
+
+        printf "\n[15/15] Finalizing installation...\n"
     ) > "$temp_output" 2>&1 &
 
     local pid=$!
     local progress=0
     local status_message="Starting Steam installation..."
-    local last_progress=0
-    local stuck_counter=0
+    local download_percent=0
 
     # Monitor progress and update dialog
     while kill -0 $pid 2>/dev/null; do
         if [[ -f "$temp_output" ]]; then
             local output=$(cat "$temp_output")
 
-            # Check for numbered steps [1/10] through [10/10]
-            if echo "$output" | grep -q "\[1/10\]"; then
+            # Track steps 1-15
+            if echo "$output" | grep -q "\[1/15\]"; then
                 status_message="Checking for conflicting packages"
-                progress=10
+                progress=6
             fi
 
-            if echo "$output" | grep -q "\[2/10\]"; then
+            if echo "$output" | grep -q "\[2/15\]"; then
                 status_message="Cleaning up old shortcuts"
-                progress=20
+                progress=12
             fi
 
-            if echo "$output" | grep -q "\[3/10\]"; then
+            if echo "$output" | grep -q "\[3/15\]"; then
                 status_message="Checking existing Steam installation"
+                progress=18
+            fi
+
+            if echo "$output" | grep -q "\[4/15\]"; then
+                status_message="Downloading Steam bootstrap"
+                progress=24
+            fi
+
+            if echo "$output" | grep -q "\[5/15\]"; then
+                status_message="Downloading Steam runtime"
                 progress=30
             fi
 
-            if echo "$output" | grep -q "\[4/10\]"; then
-                status_message="Downloading Steam bootstrap"
-                progress=40
-            fi
-
-            if echo "$output" | grep -q "\[5/10\]"; then
-                status_message="Downloading Steam runtime"
-                progress=50
-            fi
-
-            if echo "$output" | grep -q "\[6/10\]"; then
+            if echo "$output" | grep -q "\[6/15\]"; then
                 status_message="Downloading DXVK-Sarek"
-                progress=60
+                progress=36
             fi
 
-            if echo "$output" | grep -q "\[7/10\]"; then
+            if echo "$output" | grep -q "\[7/15\]"; then
                 status_message="Downloading VKD3D-Proton"
-                progress=70
+                progress=42
             fi
 
-            if echo "$output" | grep -q "\[8/10\]"; then
+            if echo "$output" | grep -q "\[8/15\]"; then
                 status_message="Configuring controller permissions"
-                progress=80
+                progress=48
             fi
 
-            if echo "$output" | grep -q "\[9/10\]"; then
-                status_message="Starting Steam update (this may take a while)"
+            # Track Steam download progress within step 9
+            if echo "$output" | grep -q "\[9/15\]"; then
+                # Check for download percentage from Steam
+                if echo "$output" | grep -q "\[[0-9]*\%\]"; then
+                    local steam_percent=$(echo "$output" | grep -o "\[[0-9]*\%\]" | tail -1 | tr -d '[]%')
+                    if [[ -n "$steam_percent" && "$steam_percent" =~ ^[0-9]+$ ]]; then
+                        # Map Steam's 0-100% to progress 48-80%
+                        download_percent=$((steam_percent * 32 / 100))
+                        progress=$((48 + download_percent))
+                        status_message="Downloading Steam update ($steam_percent%)"
+                    fi
+                fi
+
+                # Check for extracting package
+                if echo "$output" | grep -q "Extracting package"; then
+                    status_message="Extracting Steam update packages"
+                    progress=70
+                fi
+
+                # Check for installing update
+                if echo "$output" | grep -q "Installing update"; then
+                    status_message="Installing Steam update"
+                    progress=75
+                fi
+
+                # Check for cleaning up
+                if echo "$output" | grep -q "Cleaning up"; then
+                    status_message="Cleaning up Steam update"
+                    progress=78
+                fi
+
+                # Check for update complete
+                if echo "$output" | grep -q "Update complete, launching"; then
+                    progress=80
+                    status_message="Steam update complete"
+                fi
+            fi
+
+            if echo "$output" | grep -q "\[10/15\]"; then
+                status_message="Steam update complete. Downloading downgrade files"
+                progress=82
+            fi
+
+            if echo "$output" | grep -q "\[11/15\]"; then
+                status_message="Applying downgrade files"
+                progress=86
+            fi
+
+            if echo "$output" | grep -q "\[12/15\]"; then
+                status_message="Setting up Steam symlinks"
                 progress=90
             fi
 
-            if echo "$output" | grep -q "\[10/10\]"; then
-                progress=100
-                status_message="Steam installed successfully!"
+            if echo "$output" | grep -q "\[13/15\]"; then
+                status_message="Creating desktop shortcuts"
+                progress=94
             fi
 
-            # Check if progress is stuck
-            if [[ $progress -eq $last_progress ]] && [[ $progress -gt 0 ]] && [[ $progress -lt 100 ]]; then
-                stuck_counter=$((stuck_counter + 1))
-                # If stuck for more than 30 seconds, try to advance
-                if [[ $stuck_counter -gt 30 ]]; then
-                    # Look for any new output that might indicate progress
-                    if echo "$output" | grep -q "Downloading\|Installing\|Configuring"; then
-                        # Still working, just not matching our step pattern
-                        # Slowly increment to show progress
-                        progress=$((progress + 1))
-                        if [[ $progress -gt 95 ]]; then
-                            progress=95
-                        fi
-                    fi
-                    stuck_counter=0
-                fi
-            else
-                stuck_counter=0
-                last_progress=$progress
+            if echo "$output" | grep -q "\[14/15\]"; then
+                progress=98
+                status_message="Steam installation complete"
+            fi
+
+            if echo "$output" | grep -q "\[15/15\]"; then
+                progress=100
+                status_message="Finalizing installation"
             fi
 
             if command -v zenity &>/dev/null; then
@@ -578,6 +750,26 @@ install_steam() {
     fi
 
     return $exit_code
+}
+
+# ===== DISABLE STEAM UPDATES =====
+# Modifies launch-steam.sh to disable update checks
+disable_steam_updates() {
+    local launch_script="$HOME/.steam/steam/launch-steam.sh"
+
+    # Check if the file exists
+    if [[ -f "$launch_script" ]]; then
+        echo "Disabling Steam update checks..."
+        # Replace UPDATE_CHECK="true" with UPDATE_CHECK="false"
+        if grep -q 'UPDATE_CHECK="true"' "$launch_script" 2>/dev/null; then
+            sed -i 's/UPDATE_CHECK="true"/UPDATE_CHECK="false"/g' "$launch_script"
+            echo "Steam update checks disabled."
+        else
+            echo "UPDATE_CHECK line not found or already modified."
+        fi
+    else
+        echo "launch-steam.sh not found at $launch_script"
+    fi
 }
 
 # ===== DECKY LOADER INSTALLATION =====
@@ -676,7 +868,7 @@ install_animations() {
     # Install Steam UI animations
     if [[ -d "$source_dir/steamui/movies" ]]; then
         mkdir -p "$steam_root/steamui/movies"
-        sudo cp -rf "$source_dir/steamui/movies/"* "$steam_root/steamui/movies/" 2>/dev/null || true
+        sudo cp -rf "$source_dir/steamui/movies/." "$steam_root/steamui/movies/" 2>/dev/null || true
         sudo chown -R "$SUDO_USER:$SUDO_USER" "$steam_root/steamui/movies" 2>/dev/null || true
         echo "50"
         echo "# Installing Steam UI animations..."
@@ -685,7 +877,7 @@ install_animations() {
     # Install UI override animations
     if [[ -d "$source_dir/uioverrides/movies" ]]; then
         mkdir -p "$steam_root/config/uioverrides/movies"
-        sudo cp -rf "$source_dir/uioverrides/movies/"* "$steam_root/config/uioverrides/movies/" 2>/dev/null || true
+        sudo cp -rf "$source_dir/uioverrides/movies/." "$steam_root/config/uioverrides/movies/" 2>/dev/null || true
         sudo chown -R "$SUDO_USER:$SUDO_USER" "$steam_root/config/uioverrides/movies" 2>/dev/null || true
         echo "100"
         echo "# Installing UI override animations..."
@@ -735,35 +927,71 @@ EOF
     update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 }
 
+# ===== CLEANUP DESKTOP =====
+# Removes old installer desktop file and creates gamingmode session
+cleanup_desktop() {
+    # Remove old installer desktop file from Desktop
+    local old_desktop="$HOME/Desktop/Install NintenDeck.desktop"
+    if [[ -f "$old_desktop" ]]; then
+        rm -f "$old_desktop"
+        echo "Removed old installer desktop file."
+    fi
+
+    # Create gamingmode session file in /usr/share/xsessions
+    local session_file="/usr/share/xsessions/gamingmode.desktop"
+
+    # Ensure the directory exists
+    if [[ ! -d "/usr/share/xsessions" ]]; then
+        sudo mkdir -p "/usr/share/xsessions"
+    fi
+
+    # Create the session file
+    sudo cat > "$session_file" << EOF
+[Desktop Entry]
+Name=Gaming Mode
+Comment=Gaming Mode Launch
+Exec=/usr/bin/gamingmode
+TryExec=/usr/bin/gamingmode
+Icon=applications-games
+Type=Application
+EOF
+
+    if [[ -f "$session_file" ]]; then
+        echo "Created gamingmode session file at $session_file"
+    else
+        echo "Failed to create gamingmode session file."
+    fi
+}
+
 # ===== MAIN INSTALLATION =====
 main() {
-    # Check internet connection
+    # Step 1: Check internet connection FIRST
     if ! check_wifi; then
-        show_error "No WiFi connection detected.\n\nPlease connect to a network and try again."
+        show_early_error "No WiFi connection detected.\n\nPlease connect to a network and try again."
         exit 1
     fi
 
-    # Install Zenity if missing (uses kdialog for password)
+    # Step 2: Install Zenity if missing (uses kdialog for password)
     if ! install_zenity; then
-        show_error "Failed to install Zenity. Please install it manually: sudo dnf install zenity"
+        echo "Failed to install Zenity. Please install it manually: sudo dnf install zenity"
         exit 1
     fi
 
-    # Get sudo password
+    # Step 3: Get sudo password
     PASSWORD=$(get_password)
     if [[ -z "$PASSWORD" ]]; then
         show_error "No password provided. Exiting."
         exit 1
     fi
 
-    # Cache sudo credentials
+    # Step 4: Cache sudo credentials
     cache_sudo "$PASSWORD"
     unset PASSWORD
 
-    # Install system packages
-    install_packages bluez bluez-tools brightnessctl xbindkeys box64
+    # Step 5: Install system packages
+    install_packages curl xinput xdotool picom xbindkeys feh bluez bluez-tools brightnessctl box64
 
-    # Install Steam
+    # Step 6: Install Steam
     (
         if install_steam; then
             echo "100"
@@ -774,7 +1002,7 @@ main() {
         fi
     ) | show_progress "Installing Steam" "Starting Steam installation..."
 
-    # Install Decky Loader
+    # Step 7: Install Decky Loader
     (
         if install_decky; then
             echo "100"
@@ -785,7 +1013,7 @@ main() {
         fi
     ) | show_progress "Installing Decky Loader" "Starting Decky Loader installation..."
 
-    # Install animations if present
+    # Step 8: Install animations if present
     if [[ -d "/usr/share/animations" ]]; then
         local has_animations=false
         [[ -d "/usr/share/animations/steamui/movies" ]] && [[ -n "$(ls -A /usr/share/animations/steamui/movies 2>/dev/null)" ]] && has_animations=true
@@ -798,9 +1026,22 @@ main() {
         fi
     fi
 
-    # Finalize setup
+    # Step 9: Configure SDDM for autologin (ensures KDE Plasma)
+    ensure_sddm_config
+
+    # Step 10: Disable Steam updates
+    disable_steam_updates
+
+    # Step 11: Apply wallpaper
     apply_wallpaper
+
+    # Step 12: Create gaming mode shortcut
     create_gaming_shortcut
+
+    # Step 13: Cleanup old desktop file and create gamingmode session
+    cleanup_desktop
+
+    # Step 14: Show completion message
     show_info "Install finished successfully!"
 
     # Cleanup

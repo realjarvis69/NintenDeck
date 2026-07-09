@@ -212,17 +212,105 @@ class Plugin:
 
     # ---------- Run scripts ----------
     async def run_reboot_hekate(self) -> None:
+        """Run reboot-hekate script using pkexec."""
         try:
-            subprocess.run(["reboot-hekate"], check=True, capture_output=True, text=True)
-            decky.logger.info("reboot-hekate executed")
+            decky.logger.info("run_reboot_hekate called")
+
+            script_path = "/usr/bin/reboot-hekate"
+
+            if not os.path.exists(script_path):
+                decky.logger.error(f"Script not found: {script_path}")
+                raise FileNotFoundError(f"Script not found: {script_path}")
+
+            # Create environment with PATH
+            env = os.environ.copy()
+            env['PATH'] = '/usr/bin:/usr/local/bin:/bin:/usr/sbin:/sbin'
+            env['HOME'] = os.path.expanduser('~')
+
+            # Use pkexec with --disable-internal-agent to avoid terminal requirement
+            # This works with your polkit rules
+            result = subprocess.run(
+                ["pkexec", "--disable-internal-agent", script_path],
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=30
+            )
+
+            decky.logger.info(f"reboot-hekate exit code: {result.returncode}")
+            if result.stdout:
+                decky.logger.info(f"reboot-hekate stdout: {result.stdout}")
+            if result.stderr:
+                decky.logger.warning(f"reboot-hekate stderr: {result.stderr}")
+
+            if result.returncode != 0:
+                decky.logger.error(f"reboot-hekate failed with code {result.returncode}")
+                raise subprocess.CalledProcessError(result.returncode, "reboot-hekate", result.stdout, result.stderr)
+
+            decky.logger.info("reboot-hekate executed successfully")
+        except subprocess.TimeoutExpired:
+            decky.logger.error("reboot-hekate timed out")
+            raise
         except Exception as e:
             decky.logger.error(f"reboot-hekate failed: {e}")
             raise
 
     async def run_switch_desktop(self) -> None:
+        """Run switch-desktop script (uses pkexec internally for specific commands)."""
         try:
-            subprocess.run(["switch-desktop"], check=True, capture_output=True, text=True)
-            decky.logger.info("switch-desktop executed")
+            decky.logger.info("run_switch_desktop called")
+
+            script_path = "/usr/bin/switch-desktop"
+
+            if not os.path.exists(script_path):
+                decky.logger.error(f"Script not found: {script_path}")
+                raise FileNotFoundError(f"Script not found: {script_path}")
+
+            # Create environment with PATH and DBUS
+            env = os.environ.copy()
+            env['PATH'] = '/usr/bin:/usr/local/bin:/bin:/usr/sbin:/sbin'
+            env['HOME'] = os.path.expanduser('~')
+            env['XDG_RUNTIME_DIR'] = f"/run/user/{os.getuid()}"
+
+            # Try to get DBUS session address for the user
+            try:
+                result = subprocess.run(
+                    ["ps", "e", "-u", str(os.getuid())],
+                    capture_output=True,
+                    text=True
+                )
+                for line in result.stdout.splitlines():
+                    if "DBUS_SESSION_BUS_ADDRESS" in line:
+                        match = re.search(r'DBUS_SESSION_BUS_ADDRESS=([^\s]+)', line)
+                        if match:
+                            env['DBUS_SESSION_BUS_ADDRESS'] = match.group(1)
+                            break
+            except Exception as e:
+                decky.logger.warning(f"Could not get DBUS session: {e}")
+
+            # Run the script normally - it will use pkexec internally for privileged commands
+            result = subprocess.run(
+                [script_path],
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=30
+            )
+
+            decky.logger.info(f"switch-desktop exit code: {result.returncode}")
+            if result.stdout:
+                decky.logger.info(f"switch-desktop stdout: {result.stdout}")
+            if result.stderr:
+                decky.logger.warning(f"switch-desktop stderr: {result.stderr}")
+
+            if result.returncode != 0:
+                decky.logger.error(f"switch-desktop failed with code {result.returncode}")
+                raise subprocess.CalledProcessError(result.returncode, "switch-desktop", result.stdout, result.stderr)
+
+            decky.logger.info("switch-desktop executed successfully")
+        except subprocess.TimeoutExpired:
+            decky.logger.error("switch-desktop timed out")
+            raise
         except Exception as e:
             decky.logger.error(f"switch-desktop failed: {e}")
             raise

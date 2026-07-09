@@ -1,6 +1,4 @@
 #!/bin/bash
-openbox-session &
-
 # disable mouse mode
 xinput set-prop "Nintendo Switch Combined Joy-Cons" "Generate Key Events" 0
 xinput set-prop "Nintendo Switch Combined Joy-Cons" "Generate Mouse Events" 0
@@ -16,6 +14,9 @@ xbindkeys &
 /usr/share/nvpmodel_indicator/nvpmodel_helper.sh 5 0
 # OC
 pkexec nvpmodel -m 4
+
+openbox &
+
 # splash
 feh --fullscreen --borderless --auto-zoom --hide-pointer --image-bg black /usr/share/splash/steam-splash.png &
 # make screen not go turn off
@@ -26,9 +27,10 @@ xset s -dpms
 while ! upower -e | grep -q 'battery_battery'; do
     sleep 1
 done
+
 # launch Big Picture
-DISPLAY=:0 steam -bigpicture -no-cef-sandbox -cef-single-process &
-sleep 10
+steam -bigpicture -no-cef-sandbox -cef-single-process
+sleep 7
 # make sure picom always running because it likes to crash
 (
     while true; do
@@ -46,3 +48,6 @@ sleep 10
         sleep 0.5
     done
 ) &
+
+# if steam closes, go to desktop
+/usr/bin/switch-desktop

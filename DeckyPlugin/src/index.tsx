@@ -276,9 +276,10 @@ const TdpView: React.FC = () => {
 };
 
 const UtilitiesView: React.FC<{
-  confirmHekate: boolean; setConfirmHekate: (v: boolean) => void; hekateTimeout: React.MutableRefObject<NodeJS.Timeout | null>;
-  confirmDesktop: boolean; setConfirmDesktop: (v: boolean) => void; desktopTimeout: React.MutableRefObject<NodeJS.Timeout | null>;
-}> = ({ confirmHekate, setConfirmHekate, hekateTimeout, confirmDesktop, setConfirmDesktop, desktopTimeout }) => {
+  confirmHekate: boolean;
+  setConfirmHekate: (v: boolean) => void;
+  hekateTimeout: React.MutableRefObject<NodeJS.Timeout | null>;
+}> = ({ confirmHekate, setConfirmHekate, hekateTimeout }) => {
   const handleRebootHekateClick = () => {
     if (confirmHekate) {
       runRebootHekate().catch(e => console.error(e));
@@ -290,21 +291,13 @@ const UtilitiesView: React.FC<{
       hekateTimeout.current = setTimeout(() => setConfirmHekate(false), 3000);
     }
   };
-  const handleSwitchDesktopClick = () => {
-    if (confirmDesktop) {
-      runSwitchDesktop().catch(e => console.error(e));
-      setConfirmDesktop(false);
-      if (desktopTimeout.current) clearTimeout(desktopTimeout.current);
-    } else {
-      setConfirmDesktop(true);
-      if (desktopTimeout.current) clearTimeout(desktopTimeout.current);
-      desktopTimeout.current = setTimeout(() => setConfirmDesktop(false), 3000);
-    }
-  };
   return (
     <PanelSection title={t("tab_utilities")}>
-      <PanelSectionRow><ButtonItem layout="below" onClick={handleRebootHekateClick}>{confirmHekate ? t("confirm") : t("reboot_hekate")}</ButtonItem></PanelSectionRow>
-      <PanelSectionRow><ButtonItem layout="below" onClick={handleSwitchDesktopClick}>{confirmDesktop ? t("confirm") : t("switch_desktop")}</ButtonItem></PanelSectionRow>
+      <PanelSectionRow>
+        <ButtonItem layout="below" onClick={handleRebootHekateClick}>
+          {confirmHekate ? t("confirm") : t("reboot_hekate")}
+        </ButtonItem>
+      </PanelSectionRow>
     </PanelSection>
   );
 };
