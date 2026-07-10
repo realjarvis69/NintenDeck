@@ -1,7 +1,17 @@
 [Desktop Entry]
-Name=NintenDeck Installer
+Comment[en_US]=nintendeck installer
 Comment=nintendeck installer
 Exec=/usr/bin/install-deck.sh
+GenericName[en_US]=
+GenericName=
 Icon=deck-installer.png
+MimeType=
+Name[en_US]=NintenDeck Installer
+Name=NintenDeck Installer
+Path=
+StartupNotify=true
 Terminal=false
+TerminalOptions=
 Type=Application
+X-KDE-SubstituteUID=false
+X-KDE-Username=
