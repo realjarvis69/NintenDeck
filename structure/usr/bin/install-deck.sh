@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# NintenDeck Installer
-# Installs Steam, Decky Loader, and configures NintenDeck system
+# NinteDeck Installer
+# Installs Steam, Decky Loader, and configures NinteDeck system
 
 # ===== CONFIGURATION =====
 KDE_SESSION="plasma"
@@ -40,99 +40,43 @@ check_wifi() {
     echo "$connected"
 }
 
-# Show error using kdialog (for early errors before Zenity is installed)
-show_early_error() {
-    local message="$1"
-    if command -v kdialog &>/dev/null; then
-        kdialog --error "$message" 2>/dev/null
-    else
-        echo "ERROR: $message"
-    fi
-}
-
 # ===== GUI HELPERS =====
-# Functions that use Zenity, fallback to kdialog if needed
+# Functions that use kdialog for all GUI interactions
 
-# Prompt for password using GUI
+# Prompt for password using kdialog
 get_password() {
-    if command -v zenity &>/dev/null; then
-        zenity --password --title="Authentication Required" --text="Enter your sudo password:" --width=400
-    elif command -v kdialog &>/dev/null; then
-        kdialog --password "Enter your sudo password:" 2>/dev/null
-    else
-        echo "No GUI dialog found. Please install zenity or kdialog."
-        exit 1
-    fi
+    kdialog --password "Enter your sudo password:" 2>/dev/null
 }
 
-# Show error dialog
+# Show error dialog using kdialog
 show_error() {
     local message="$1"
-    if command -v zenity &>/dev/null; then
-        zenity --error --title="Error" --text="$message" --width=400
-    elif command -v kdialog &>/dev/null; then
-        kdialog --error "$message" 2>/dev/null
-    else
-        echo "ERROR: $message"
-    fi
+    kdialog --error "$message" 2>/dev/null
 }
 
-# Show info dialog
+# Show info dialog using kdialog
 show_info() {
     local message="$1"
-    if command -v zenity &>/dev/null; then
-        zenity --info --title="Information" --text="$message" --width=400
-    elif command -v kdialog &>/dev/null; then
-        kdialog --msgbox "$message" 2>/dev/null
-    else
-        echo "INFO: $message"
-    fi
+    kdialog --msgbox "$message" 2>/dev/null
 }
 
-# Show yes/no question dialog
+# Show yes/no question dialog using kdialog
 show_question() {
     local message="$1"
-    if command -v zenity &>/dev/null; then
-        zenity --question --title="Question" --text="$message" --width=400
-        return $?
-    elif command -v kdialog &>/dev/null; then
-        kdialog --yesno "$message" 2>/dev/null
-        return $?
-    else
-        echo "QUESTION: $message"
-        return 1
-    fi
+    kdialog --yesno "$message" 2>/dev/null
+    return $?
 }
 
-# Show warning dialog
+# Show warning dialog using kdialog
 show_warning() {
     local message="$1"
-    if command -v zenity &>/dev/null; then
-        zenity --warning --title="Warning" --text="$message" --width=400
-    elif command -v kdialog &>/dev/null; then
-        kdialog --warning "$message" 2>/dev/null
-    else
-        echo "WARNING: $message"
-    fi
+    kdialog --warning "$message" 2>/dev/null
 }
 
-# Show progress dialog with Zenity
-show_progress() {
-    local title="$1"
-    local text="$2"
-
-    if command -v zenity &>/dev/null; then
-        zenity --progress \
-            --title="$title" \
-            --text="$text" \
-            --percentage=0 \
-            --width=450 \
-            --auto-close \
-            --no-cancel 2>/dev/null
-    else
-        # Fallback - just show a message
-        show_info "$title\n\n$text\n\nPlease wait..."
-    fi
+# Show passive popup (non-intrusive notification)
+show_passive_popup() {
+    local message="$1"
+    kdialog --passivepopup "$message" 3 2>/dev/null
 }
 
 # ===== INSTALL ZENITY =====
@@ -143,21 +87,25 @@ install_zenity() {
     fi
 
     if ! command -v dnf &>/dev/null; then
-        echo "DNF not found. Please install zenity manually."
+        show_error "DNF not found. Please install zenity manually."
         return 1
     fi
 
+    show_warning "Zenity is required but not installed.\n\nClick OK to install it using DNF."
+
     local password=$(kdialog --password "Enter sudo password to install Zenity:" 2>/dev/null)
     if [[ -z "$password" ]]; then
-        echo "No password provided. Cannot install Zenity."
+        show_error "No password provided. Cannot install Zenity."
         return 1
     fi
 
     echo "$password" | sudo -S dnf install -y zenity 2>/dev/null
 
     if [[ $? -eq 0 ]] && command -v zenity &>/dev/null; then
+        show_passive_popup "Zenity installed successfully!"
         return 0
     else
+        show_error "Failed to install Zenity. Please install it manually: sudo dnf install zenity"
         return 1
     fi
 }
@@ -186,21 +134,36 @@ keep_sudo_alive() {
     trap "kill $SUDO_KEEPER_PID 2>/dev/null" EXIT
 }
 
-# ===== PACKAGE INSTALLATION =====
-# Installs required system packages using dnf (skips if dnf not found)
-install_packages() {
+# ===== INSTALL ALL PACKAGES =====
+# Installs all required system packages in one go
+install_all_packages() {
     if ! command -v dnf &>/dev/null; then
         show_warning "DNF not found. Skipping package installation.\n\nInstall manually if needed:\ncurl xinput xdotool picom xbindkeys feh bluez bluez-tools brightnessctl box64"
         return 0
     fi
 
-    local packages=("$@")
+    local packages=(
+        curl
+        xinput
+        xdotool
+        picom
+        xbindkeys
+        feh
+        bluez
+        bluez-tools
+        brightnessctl
+        box64
+        zenity
+    )
+
+    show_info "Installing required packages:\n${packages[*]}"
 
     if ! sudo dnf install -y "${packages[@]}" 2>/dev/null; then
         show_warning "Some packages failed to install.\n\nInstall manually if needed:\n${packages[*]}"
         return 0
     fi
 
+    show_passive_popup "All packages installed successfully!"
     return 0
 }
 
@@ -238,43 +201,28 @@ ensure_sddm_config() {
 move_steam_window() {
     # Check if xdotool is installed
     if ! command -v xdotool &>/dev/null; then
-        # Try to install it
-        if command -v dnf &>/dev/null; then
-            sudo dnf install -y xdotool 2>/dev/null || return 1
-        elif command -v apt &>/dev/null; then
-            sudo apt install -y xdotool 2>/dev/null || return 1
-        else
-            return 1
-        fi
+        return 1
     fi
 
     # Get screen resolution dynamically
     local screen_width=$(xrandr 2>/dev/null | awk '/\*/ {print $1}' | head -n 1 | cut -d'x' -f1)
     if [[ -z "$screen_width" ]]; then
-        # Fallback using xdpyinfo if xrandr fails
         screen_width=$(xdpyinfo 2>/dev/null | grep -oP 'dimensions:\s+\K[0-9]+' | head -n 1)
     fi
 
-    # If we still can't get resolution, use defaults
     if [[ -z "$screen_width" ]]; then
-        screen_width=1920  # Default to 1080p
+        screen_width=1920
     fi
 
-    # Steam updater window dimensions (roughly 430x220)
     local steam_w=430
     local padding=20
-
-    # Calculate target X for top-right corner
     local target_x=$((screen_width - steam_w - padding))
     local target_y=20
 
-    # Start background monitor loop
     (
         while true; do
-            # Look for Steam updater window
             local wid=$(xdotool search --name "Updating Steam" 2>/dev/null | head -n 1)
             if [[ -n "$wid" ]]; then
-                # Move window to top-right corner
                 xdotool windowmove "$wid" "$target_x" "$target_y" 2>/dev/null
                 break
             fi
@@ -282,7 +230,6 @@ move_steam_window() {
         done
     ) &
 
-    # Store PID so we can clean it up later
     STEAM_MOVE_PID=$!
 }
 
@@ -291,10 +238,8 @@ move_steam_window() {
 install_steam() {
     local temp_output=$(mktemp)
 
-    # Start the window mover in background
     move_steam_window
 
-    # Run Switchdeck installation with real-time output
     (
         # Switchdeck by SildurFX | https://github.com/SildurFX/Switchdeck
         # License: GPLv3
@@ -312,7 +257,7 @@ install_steam() {
         DESKTOP_DIR=$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")
 
         # Remove conflicting native Steam packages
-        printf "\n[1/15] Checking for conflicting system packages...\n"
+        printf "\n[1/14] Checking for conflicting system packages...\n"
         if command -v apt-get &>/dev/null; then
             dpkg -l | grep -q "^ii  steam-launcher " && {
                 printf "Found conflicting system steam package. Uninstalling..\n"
@@ -331,7 +276,7 @@ install_steam() {
         fi
 
         # Clean up old Steam desktop shortcuts
-        printf "\n[2/15] Cleaning up old desktop shortcuts...\n"
+        printf "\n[2/14] Cleaning up old desktop shortcuts...\n"
         for file in "$HOME/.local/share/applications/Steam.desktop" \
                     "$HOME/.local/share/applications/steam.desktop" \
                     "/usr/local/share/applications/Steam.desktop" \
@@ -352,7 +297,7 @@ install_steam() {
         command -v update-desktop-database &>/dev/null && update-desktop-database "$HOME/.local/share/applications" &>/dev/null || true
 
         # Ask user if they want to delete existing Steam directories
-        printf "\n[3/15] Checking existing Steam installation...\n"
+        printf "\n[3/14] Checking existing Steam installation...\n"
         if [ -d "$STEAMROOT" ] || [ -d "$STEAMHOME" ]; then
             printf "Steam directories already exist.\n"
             if show_question "Steam directories already exist.\n\nA clean installation is recommended. Would you like to delete them now?\n\n⚠️ WARNING: This will remove all Steam data including games!"; then
@@ -382,7 +327,7 @@ install_steam() {
         fi
 
         # Download Steam bootstrap
-        printf "\n[4/15] Downloading Steam bootstrap...\n"
+        printf "\n[4/14] Downloading Steam bootstrap...\n"
         if [ ! -x "$RTARM64ROOT" ]; then
             mkdir -p "$STEAMROOT/package"
             rm -f "$STEAMROOT/package/beta"
@@ -395,7 +340,7 @@ install_steam() {
         fi
 
         # Download Steam runtime
-        printf "\n[5/15] Downloading Steam runtime...\n"
+        printf "\n[5/14] Downloading Steam runtime...\n"
         if [ ! -x "$RTARM64ROOT/pv-runtime/steam-runtime-steamrt-arm64" ]; then
             mkdir -p "$RTARM64ROOT/pv-runtime"
             wget -q --show-progress -c -t 5 -O "$RTARM64ROOT/pv-runtime/steam-runtime-steamrt-arm64.tar.xz" "https://repo.steampowered.com/steamrt3c/images/latest-public-beta/steam-runtime-steamrt-arm64.tar.xz" || exit_on_error "steam runtime download failed (check your internet connection)"
@@ -404,7 +349,7 @@ install_steam() {
         fi
 
         # Install DXVK-Sarek
-        printf "\n[6/15] Downloading DXVK-Sarek...\n"
+        printf "\n[6/14] Downloading DXVK-Sarek...\n"
         if [ ! -d "$STEAMROOT/Switchdeck/DXVK" ]; then
             mkdir -p "$STEAMROOT/Switchdeck/DXVK"
 
@@ -423,7 +368,7 @@ install_steam() {
         fi
 
         # Install VKD3D-Proton
-        printf "\n[7/15] Downloading VKD3D-Proton...\n"
+        printf "\n[7/14] Downloading VKD3D-Proton...\n"
         if [ ! -d "$STEAMROOT/Switchdeck/VKD3D" ]; then
             mkdir -p "$STEAMROOT/Switchdeck/VKD3D"
 
@@ -439,7 +384,7 @@ install_steam() {
         fi
 
         # Configure controller permissions
-        printf "\n[8/15] Configuring controller permissions...\n"
+        printf "\n[8/14] Configuring controller permissions...\n"
         CONTROLLER_RELOAD=0
         if command -v apt-get &>/dev/null; then
             dpkg -s steam-devices &>/dev/null || {
@@ -473,12 +418,12 @@ install_steam() {
         fi
 
         # Run Steam initial update
-        printf "\n[9/15] Starting Steam initial update (this may take a while)...\n"
+        printf "\n[9/14] Starting Steam initial update (this may take a while)...\n"
         if [ -x "$RTARM64ROOT/steam" ]; then
             export LD_LIBRARY_PATH="$RTARM64ROOT:${LD_LIBRARY_PATH-}"
             "$RTARM64ROOT/steam" "$@" || true
 
-            printf "\n[10/15] Steam update complete. Downloading downgrade files...\n"
+            printf "\n[10/14] Steam update complete. Downloading downgrade files...\n"
 
             TEMP_SD="$STEAMROOT/temp_sd"
             mkdir -p "$TEMP_SD"
@@ -501,7 +446,7 @@ install_steam() {
                 rm -f "$TEMP_SD/steamrtarm64.tar.gz"
             fi
 
-            printf "\n[11/15] Applying downgrade files...\n"
+            printf "\n[11/14] Applying downgrade files...\n"
             cp -f  "$TEMP_SD/files/downgrade/steam.cfg" "$STEAMROOT/steam.cfg"
             cp -f  "$TEMP_SD/files/steam/launch-steam.sh" "$STEAMROOT/"
             cp -f  "$TEMP_SD/files/steam/update-switchdeck.sh" "$STEAMROOT/"
@@ -513,7 +458,7 @@ install_steam() {
             # Don't trigger old version migration on a fresh install
             touch "$STEAMROOT/Switchdeck/.migration"
 
-            printf "\n[12/15] Setting up Steam symlinks...\n"
+            printf "\n[12/14] Setting up Steam symlinks...\n"
             # Setup symlinks
             ln -fsn "$STEAMROOT" "$STEAMHOME/root"
             ln -fsn "$STEAMROOT" "$STEAMHOME/steam"
@@ -529,7 +474,7 @@ install_steam() {
             mkdir -p "$HOME/.local/bin"
             ln -fsn "$STEAMROOT/launch-steam.sh" "$HOME/.local/bin/steam"
 
-            printf "\n[13/15] Creating desktop shortcuts...\n"
+            printf "\n[13/14] Creating desktop shortcuts...\n"
             # Setup desktop path and icon
             MENU_DIR="$HOME/.local/share/applications"
             mkdir -p "$MENU_DIR"
@@ -590,132 +535,111 @@ EOF
             # Just to be safe
             chmod -R +x "$STEAMROOT"
 
-            printf "\n[14/15] Steam installation complete!\n"
+            printf "\n[14/14] Steam installation complete!\n"
             printf "To launch Steam, use the provided desktop shortcuts\n"
             printf "or run launch-steam.sh in your Steam folder.\n\n"
             sleep 3
         fi
-
-        printf "\n[15/15] Finalizing installation...\n"
     ) > "$temp_output" 2>&1 &
 
     local pid=$!
     local progress=0
     local status_message="Starting Steam installation..."
-    local download_percent=0
 
     # Monitor progress and update dialog
     while kill -0 $pid 2>/dev/null; do
         if [[ -f "$temp_output" ]]; then
             local output=$(cat "$temp_output")
 
-            # Track steps 1-15
-            if echo "$output" | grep -q "\[1/15\]"; then
+            if echo "$output" | grep -q "\[1/14\]"; then
                 status_message="Checking for conflicting packages"
-                progress=6
+                progress=7
             fi
 
-            if echo "$output" | grep -q "\[2/15\]"; then
+            if echo "$output" | grep -q "\[2/14\]"; then
                 status_message="Cleaning up old shortcuts"
-                progress=12
+                progress=14
             fi
 
-            if echo "$output" | grep -q "\[3/15\]"; then
+            if echo "$output" | grep -q "\[3/14\]"; then
                 status_message="Checking existing Steam installation"
-                progress=18
+                progress=21
             fi
 
-            if echo "$output" | grep -q "\[4/15\]"; then
+            if echo "$output" | grep -q "\[4/14\]"; then
                 status_message="Downloading Steam bootstrap"
-                progress=24
+                progress=28
             fi
 
-            if echo "$output" | grep -q "\[5/15\]"; then
+            if echo "$output" | grep -q "\[5/14\]"; then
                 status_message="Downloading Steam runtime"
-                progress=30
+                progress=35
             fi
 
-            if echo "$output" | grep -q "\[6/15\]"; then
+            if echo "$output" | grep -q "\[6/14\]"; then
                 status_message="Downloading DXVK-Sarek"
-                progress=36
-            fi
-
-            if echo "$output" | grep -q "\[7/15\]"; then
-                status_message="Downloading VKD3D-Proton"
                 progress=42
             fi
 
-            if echo "$output" | grep -q "\[8/15\]"; then
-                status_message="Configuring controller permissions"
-                progress=48
+            if echo "$output" | grep -q "\[7/14\]"; then
+                status_message="Downloading VKD3D-Proton"
+                progress=49
             fi
 
-            # Track Steam download progress within step 9
-            if echo "$output" | grep -q "\[9/15\]"; then
+            if echo "$output" | grep -q "\[8/14\]"; then
+                status_message="Configuring controller permissions"
+                progress=56
+            fi
+
+            if echo "$output" | grep -q "\[9/14\]"; then
                 # Check for download percentage from Steam
                 if echo "$output" | grep -q "\[[0-9]*\%\]"; then
                     local steam_percent=$(echo "$output" | grep -o "\[[0-9]*\%\]" | tail -1 | tr -d '[]%')
                     if [[ -n "$steam_percent" && "$steam_percent" =~ ^[0-9]+$ ]]; then
-                        # Map Steam's 0-100% to progress 48-80%
-                        download_percent=$((steam_percent * 32 / 100))
-                        progress=$((48 + download_percent))
+                        progress=$((56 + (steam_percent * 24 / 100)))
                         status_message="Downloading Steam update ($steam_percent%)"
                     fi
                 fi
 
-                # Check for extracting package
                 if echo "$output" | grep -q "Extracting package"; then
-                    status_message="Extracting Steam update packages"
-                    progress=70
-                fi
-
-                # Check for installing update
-                if echo "$output" | grep -q "Installing update"; then
-                    status_message="Installing Steam update"
+                    status_message="Extracting Steam update"
                     progress=75
                 fi
 
-                # Check for cleaning up
-                if echo "$output" | grep -q "Cleaning up"; then
-                    status_message="Cleaning up Steam update"
+                if echo "$output" | grep -q "Installing update"; then
+                    status_message="Installing Steam update"
                     progress=78
                 fi
 
-                # Check for update complete
                 if echo "$output" | grep -q "Update complete, launching"; then
                     progress=80
                     status_message="Steam update complete"
                 fi
             fi
 
-            if echo "$output" | grep -q "\[10/15\]"; then
-                status_message="Steam update complete. Downloading downgrade files"
-                progress=82
+            if echo "$output" | grep -q "\[10/14\]"; then
+                status_message="Downloading downgrade files"
+                progress=84
             fi
 
-            if echo "$output" | grep -q "\[11/15\]"; then
+            if echo "$output" | grep -q "\[11/14\]"; then
                 status_message="Applying downgrade files"
-                progress=86
+                progress=88
             fi
 
-            if echo "$output" | grep -q "\[12/15\]"; then
+            if echo "$output" | grep -q "\[12/14\]"; then
                 status_message="Setting up Steam symlinks"
-                progress=90
+                progress=92
             fi
 
-            if echo "$output" | grep -q "\[13/15\]"; then
+            if echo "$output" | grep -q "\[13/14\]"; then
                 status_message="Creating desktop shortcuts"
-                progress=94
+                progress=96
             fi
 
-            if echo "$output" | grep -q "\[14/15\]"; then
-                progress=98
-                status_message="Steam installation complete"
-            fi
-
-            if echo "$output" | grep -q "\[15/15\]"; then
+            if echo "$output" | grep -q "\[14/14\]"; then
                 progress=100
-                status_message="Finalizing installation"
+                status_message="Steam installed successfully!"
             fi
 
             if command -v zenity &>/dev/null; then
@@ -730,7 +654,6 @@ EOF
     local exit_code=$?
     rm -f "$temp_output"
 
-    # Clean up the window mover process
     if [[ -n "$STEAM_MOVE_PID" ]]; then
         kill $STEAM_MOVE_PID 2>/dev/null
     fi
@@ -743,18 +666,11 @@ EOF
 disable_steam_updates() {
     local launch_script="$HOME/.steam/steam/launch-steam.sh"
 
-    # Check if the file exists
     if [[ -f "$launch_script" ]]; then
-        echo "Disabling Steam update checks..."
-        # Replace UPDATE_CHECK="true" with UPDATE_CHECK="false"
         if grep -q 'UPDATE_CHECK="true"' "$launch_script" 2>/dev/null; then
             sed -i 's/UPDATE_CHECK="true"/UPDATE_CHECK="false"/g' "$launch_script"
             echo "Steam update checks disabled."
-        else
-            echo "UPDATE_CHECK line not found or already modified."
         fi
-    else
-        echo "launch-steam.sh not found at $launch_script"
     fi
 }
 
@@ -851,7 +767,6 @@ install_animations() {
         return 0
     fi
 
-    # Install Steam UI animations
     if [[ -d "$source_dir/steamui/movies" ]]; then
         mkdir -p "$steam_root/steamui/movies"
         sudo cp -rf "$source_dir/steamui/movies/." "$steam_root/steamui/movies/" 2>/dev/null || true
@@ -860,7 +775,6 @@ install_animations() {
         echo "# Installing Steam UI animations..."
     fi
 
-    # Install UI override animations
     if [[ -d "$source_dir/uioverrides/movies" ]]; then
         mkdir -p "$steam_root/config/uioverrides/movies"
         sudo cp -rf "$source_dir/uioverrides/movies/." "$steam_root/config/uioverrides/movies/" 2>/dev/null || true
@@ -870,108 +784,6 @@ install_animations() {
     fi
 
     return 0
-}
-
-# ===== MODIFY STEAM UI SCALING =====
-# Fixes Steam UI scaling for Switch display
-modify_steam_ui_scaling() {
-    local config_file="$HOME/.steam/steam/config/config.vdf"
-
-    # Check if config file exists
-    if [[ ! -f "$config_file" ]]; then
-        echo "Steam config file not found at $config_file"
-        return 1
-    fi
-
-    # Create a backup of the config file
-    local backup_file="$config_file.backup.$(date +%Y%m%d_%H%M%S)"
-    cp "$config_file" "$backup_file"
-    echo "Created backup at $backup_file"
-
-    # Extract the display name from the UI section (case insensitive for "name")
-    local display_name=$(grep -A 20 '"UI"' "$config_file" | grep -i '"name"' | head -1 | sed 's/.*"name"[[:space:]]*"\(.*\)"/\1/I')
-
-    if [[ -z "$display_name" ]]; then
-        echo "Could not find display name in config file"
-        return 1
-    fi
-
-    echo "Found display name: $display_name"
-
-    # Check if the section already exists
-    if grep -q "\"$display_name\"" "$config_file"; then
-        echo "Section for $display_name already exists. Updating ScaleFactor to 1.37..."
-        # Update existing ScaleFactor in that section
-        sed -i "/\"$display_name\"/,/}/ s/\"ScaleFactor\"[[:space:]]*\"[0-9.]*\"/\"ScaleFactor\"\t\t\"1.37\"/" "$config_file"
-    else
-        echo "Adding new section for $display_name with ScaleFactor 1.37..."
-
-        # Use awk to insert the new section after the "Current" section
-        awk -v display="$display_name" '
-        BEGIN { in_current = 0; inserted = 0; buffer = "" }
-        {
-            # Store current line in buffer
-            buffer = buffer $0 "\n"
-
-            # Check if we are in the "Current" section
-            if ($0 ~ /"Current"/) {
-                in_current = 1
-                brace_count = 0
-            }
-
-            # If we are in the "Current" section, track braces
-            if (in_current) {
-                # Count braces in this line
-                for (i=1; i<=length($0); i++) {
-                    char = substr($0, i, 1)
-                    if (char == "{") brace_count++
-                    if (char == "}") brace_count--
-                }
-
-                # If brace_count is 0 and we are still in_current, we found the closing brace
-                if (brace_count == 0 && in_current) {
-                    # Insert the new section before this closing brace
-                    printf "\t\t\t\"%s\"\n", display
-                    printf "\t\t\t{\n"
-                    printf "\t\t\t\t\"ScaleFactor\"\t\t\"1.37\"\n"
-                    printf "\t\t\t}\n"
-                    in_current = 0
-                    inserted = 1
-                }
-            }
-
-            # If we have a buffer and we inserted, print it
-            if (inserted) {
-                print buffer
-                buffer = ""
-                inserted = 0
-            }
-
-            # If we haven't inserted and buffer is not empty, print it
-            if (!inserted && buffer != "") {
-                print buffer
-                buffer = ""
-            }
-        }
-        END {
-            # Print any remaining buffer
-            if (buffer != "") print buffer
-        }' "$config_file" > "$config_file.tmp"
-
-        # Replace original with modified
-        mv "$config_file.tmp" "$config_file"
-    fi
-
-    # Verify the change
-    if grep -q "\"$display_name\"" "$config_file"; then
-        echo "Successfully modified Steam UI scaling for $display_name"
-        return 0
-    else
-        echo "Failed to modify Steam UI scaling"
-        # Restore backup
-        cp "$backup_file" "$config_file"
-        return 1
-    fi
 }
 
 # ===== WALLPAPER =====
@@ -1018,7 +830,6 @@ EOF
 # ===== CLEANUP DESKTOP =====
 # Removes old installer desktop file
 cleanup_desktop() {
-    # Remove old installer desktop file from Desktop
     local old_desktop="$HOME/Desktop/Install NintenDeck.desktop"
     if [[ -f "$old_desktop" ]]; then
         rm -f "$old_desktop"
@@ -1028,33 +839,27 @@ cleanup_desktop() {
 
 # ===== MAIN INSTALLATION =====
 main() {
-    # Step 1: Check internet connection FIRST
+    # Step 1: Check internet connection
     if ! check_wifi; then
-        show_early_error "No WiFi connection detected.\n\nPlease connect to a network and try again."
+        show_error "No WiFi connection detected.\n\nPlease connect to a network and try again."
         exit 1
     fi
 
-    # Step 2: Install Zenity if missing (uses kdialog for password)
-    if ! install_zenity; then
-        echo "Failed to install Zenity. Please install it manually: sudo dnf install zenity"
-        exit 1
-    fi
-
-    # Step 3: Get sudo password
+    # Step 2: Get sudo password using kdialog
     PASSWORD=$(get_password)
     if [[ -z "$PASSWORD" ]]; then
         show_error "No password provided. Exiting."
         exit 1
     fi
 
-    # Step 4: Cache sudo credentials
+    # Step 3: Cache sudo credentials
     cache_sudo "$PASSWORD"
     unset PASSWORD
 
-    # Step 5: Install system packages
-    install_packages curl xinput xdotool picom xbindkeys feh bluez bluez-tools brightnessctl box64
+    # Step 4: Install all packages in one go
+    install_all_packages
 
-    # Step 6: Install Steam
+    # Step 5: Install Steam
     (
         if install_steam; then
             echo "100"
@@ -1063,9 +868,9 @@ main() {
             show_error "Failed to install Steam.\n\nPlease check your internet connection and try again."
             exit 1
         fi
-    ) | show_progress "Installing Steam" "Starting Steam installation..."
+    ) | (command -v zenity &>/dev/null && zenity --progress --title="Installing Steam" --text="Starting Steam installation..." --percentage=0 --width=450 --auto-close --no-cancel 2>/dev/null || cat)
 
-    # Step 7: Install Decky Loader
+    # Step 6: Install Decky Loader
     (
         if install_decky; then
             echo "100"
@@ -1074,9 +879,9 @@ main() {
             show_error "Failed to install Decky Loader.\n\nPlease check your internet connection and try again."
             exit 1
         fi
-    ) | show_progress "Installing Decky Loader" "Starting Decky Loader installation..."
+    ) | (command -v zenity &>/dev/null && zenity --progress --title="Installing Decky Loader" --text="Starting Decky Loader installation..." --percentage=0 --width=450 --auto-close --no-cancel 2>/dev/null || cat)
 
-    # Step 8: Install animations if present
+    # Step 7: Install animations if present
     if [[ -d "/usr/share/animations" ]]; then
         local has_animations=false
         [[ -d "/usr/share/animations/steamui/movies" ]] && [[ -n "$(ls -A /usr/share/animations/steamui/movies 2>/dev/null)" ]] && has_animations=true
@@ -1085,29 +890,26 @@ main() {
         if [[ "$has_animations" == "true" ]]; then
             (
                 install_animations "$HOME"
-            ) | show_progress "Installing Animations" "Copying custom animations to Steam..."
+            ) | (command -v zenity &>/dev/null && zenity --progress --title="Installing Animations" --text="Copying custom animations to Steam..." --percentage=0 --width=450 --auto-close --no-cancel 2>/dev/null || cat)
         fi
     fi
 
-    # Step 9: Configure SDDM for autologin (ensures KDE Plasma)
+    # Step 8: Configure SDDM for autologin
     ensure_sddm_config
 
-    # Step 10: Disable Steam updates
+    # Step 9: Disable Steam updates
     disable_steam_updates
 
-    # Step 11: Modify Steam UI scaling for Switch display
-    modify_steam_ui_scaling
-
-    # Step 12: Apply wallpaper
+    # Step 10: Apply wallpaper
     apply_wallpaper
 
-    # Step 13: Create gaming mode shortcut
+    # Step 11: Create gaming mode shortcut
     create_gaming_shortcut
 
-    # Step 14: Cleanup old desktop file
+    # Step 12: Cleanup old desktop file
     cleanup_desktop
 
-    # Step 15: Show completion message
+    # Step 13: Show completion message
     show_info "Install finished successfully!"
 
     # Cleanup
