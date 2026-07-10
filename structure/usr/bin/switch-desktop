@@ -2,7 +2,7 @@
 
 # === CONFIGURATION ===
 KDE_SESSION="plasma"
-OPENBOX_SESSION="openbox"
+GAMING_SESSION="gamingmode"
 SDDM_CONFIG_DIR="/etc/sddm.conf.d"
 SDDM_CONFIG_FILE="$SDDM_CONFIG_DIR/kde_settings.conf"
 
@@ -45,8 +45,10 @@ set_next_session() {
 get_current_de() {
     if [[ "$XDG_CURRENT_DESKTOP" == *"KDE"* ]] || pgrep -x "plasmashell" > /dev/null 2>&1; then
         echo "kde"
+    # Even though we launch via gamingmode, it still runs openbox internally,
+    # so keeping the openbox detection here handles the check perfectly.
     elif [[ "$XDG_CURRENT_DESKTOP" == *"Openbox"* ]] || pgrep -x "openbox" > /dev/null 2>&1; then
-        echo "openbox"
+        echo "gamingmode"
     else
         echo "unknown"
     fi
@@ -59,7 +61,7 @@ logout_immediate() {
         kdeinit_shutdown 2>/dev/null || \
         loginctl terminate-user "$CURRENT_USER"
     elif pgrep -x "openbox" > /dev/null 2>&1; then
-        echo "Logging out of Openbox..."
+        echo "Logging out of Gaming Mode..."
         openbox --exit 2>/dev/null || \
         pkill -x "openbox" || \
         loginctl terminate-user "$CURRENT_USER"
@@ -74,13 +76,13 @@ current_de=$(get_current_de)
 case $current_de in
     kde)
         echo "Currently in KDE Plasma (user: $CURRENT_USER)"
-        echo "Switching to Openbox on next login..."
-        set_next_session "$OPENBOX_SESSION"
+        echo "Switching to Gaming Mode on next login..."
+        set_next_session "$GAMING_SESSION"
         sleep 1
         logout_immediate
         ;;
-    openbox)
-        echo "Currently in Openbox (user: $CURRENT_USER)"
+    gamingmode)
+        echo "Currently in Gaming Mode (user: $CURRENT_USER)"
         echo "Switching to KDE Plasma on next login..."
         set_next_session "$KDE_SESSION"
         sleep 1

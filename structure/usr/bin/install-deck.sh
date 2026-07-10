@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# NinteDeck Installer
-# Installs Steam, Decky Loader, and configures NinteDeck system
+# NintenDeck Installer
+# Installs Steam, Decky Loader, and configures NintenDeck system
 
 # ===== CONFIGURATION =====
 KDE_SESSION="plasma"
@@ -231,20 +231,6 @@ ensure_sddm_config() {
             sudo sed -i "/\[Autologin\]/a Session=$KDE_SESSION" "$SDDM_CONFIG_FILE"
         fi
     fi
-}
-
-# Sets the next session for reboot
-set_next_session() {
-    local session="$1"
-    ensure_sddm_config
-
-    if grep -q "^Session=" "$SDDM_CONFIG_FILE" 2>/dev/null; then
-        sudo sed -i "s/^Session=.*/Session=$session/" "$SDDM_CONFIG_FILE"
-    else
-        sudo sed -i "/\[Autologin\]/a Session=$session" "$SDDM_CONFIG_FILE"
-    fi
-
-    echo "Next session set to: $session for user $CURRENT_USER"
 }
 
 # ===== MOVE STEAM WINDOW TO TOP RIGHT =====
@@ -886,6 +872,108 @@ install_animations() {
     return 0
 }
 
+# ===== MODIFY STEAM UI SCALING =====
+# Fixes Steam UI scaling for Switch display
+modify_steam_ui_scaling() {
+    local config_file="$HOME/.steam/steam/config/config.vdf"
+
+    # Check if config file exists
+    if [[ ! -f "$config_file" ]]; then
+        echo "Steam config file not found at $config_file"
+        return 1
+    fi
+
+    # Create a backup of the config file
+    local backup_file="$config_file.backup.$(date +%Y%m%d_%H%M%S)"
+    cp "$config_file" "$backup_file"
+    echo "Created backup at $backup_file"
+
+    # Extract the display name from the UI section (case insensitive for "name")
+    local display_name=$(grep -A 20 '"UI"' "$config_file" | grep -i '"name"' | head -1 | sed 's/.*"name"[[:space:]]*"\(.*\)"/\1/I')
+
+    if [[ -z "$display_name" ]]; then
+        echo "Could not find display name in config file"
+        return 1
+    fi
+
+    echo "Found display name: $display_name"
+
+    # Check if the section already exists
+    if grep -q "\"$display_name\"" "$config_file"; then
+        echo "Section for $display_name already exists. Updating ScaleFactor to 1.37..."
+        # Update existing ScaleFactor in that section
+        sed -i "/\"$display_name\"/,/}/ s/\"ScaleFactor\"[[:space:]]*\"[0-9.]*\"/\"ScaleFactor\"\t\t\"1.37\"/" "$config_file"
+    else
+        echo "Adding new section for $display_name with ScaleFactor 1.37..."
+
+        # Use awk to insert the new section after the "Current" section
+        awk -v display="$display_name" '
+        BEGIN { in_current = 0; inserted = 0; buffer = "" }
+        {
+            # Store current line in buffer
+            buffer = buffer $0 "\n"
+
+            # Check if we are in the "Current" section
+            if ($0 ~ /"Current"/) {
+                in_current = 1
+                brace_count = 0
+            }
+
+            # If we are in the "Current" section, track braces
+            if (in_current) {
+                # Count braces in this line
+                for (i=1; i<=length($0); i++) {
+                    char = substr($0, i, 1)
+                    if (char == "{") brace_count++
+                    if (char == "}") brace_count--
+                }
+
+                # If brace_count is 0 and we are still in_current, we found the closing brace
+                if (brace_count == 0 && in_current) {
+                    # Insert the new section before this closing brace
+                    printf "\t\t\t\"%s\"\n", display
+                    printf "\t\t\t{\n"
+                    printf "\t\t\t\t\"ScaleFactor\"\t\t\"1.37\"\n"
+                    printf "\t\t\t}\n"
+                    in_current = 0
+                    inserted = 1
+                }
+            }
+
+            # If we have a buffer and we inserted, print it
+            if (inserted) {
+                print buffer
+                buffer = ""
+                inserted = 0
+            }
+
+            # If we haven't inserted and buffer is not empty, print it
+            if (!inserted && buffer != "") {
+                print buffer
+                buffer = ""
+            }
+        }
+        END {
+            # Print any remaining buffer
+            if (buffer != "") print buffer
+        }' "$config_file" > "$config_file.tmp"
+
+        # Replace original with modified
+        mv "$config_file.tmp" "$config_file"
+    fi
+
+    # Verify the change
+    if grep -q "\"$display_name\"" "$config_file"; then
+        echo "Successfully modified Steam UI scaling for $display_name"
+        return 0
+    else
+        echo "Failed to modify Steam UI scaling"
+        # Restore backup
+        cp "$backup_file" "$config_file"
+        return 1
+    fi
+}
+
 # ===== WALLPAPER =====
 # Applies BlueDeck wallpaper using KDE's DBus API
 apply_wallpaper() {
@@ -928,38 +1016,13 @@ EOF
 }
 
 # ===== CLEANUP DESKTOP =====
-# Removes old installer desktop file and creates gamingmode session
+# Removes old installer desktop file
 cleanup_desktop() {
     # Remove old installer desktop file from Desktop
     local old_desktop="$HOME/Desktop/Install NintenDeck.desktop"
     if [[ -f "$old_desktop" ]]; then
         rm -f "$old_desktop"
         echo "Removed old installer desktop file."
-    fi
-
-    # Create gamingmode session file in /usr/share/xsessions
-    local session_file="/usr/share/xsessions/gamingmode.desktop"
-
-    # Ensure the directory exists
-    if [[ ! -d "/usr/share/xsessions" ]]; then
-        sudo mkdir -p "/usr/share/xsessions"
-    fi
-
-    # Create the session file
-    sudo cat > "$session_file" << EOF
-[Desktop Entry]
-Name=Gaming Mode
-Comment=Gaming Mode Launch
-Exec=/usr/bin/gamingmode
-TryExec=/usr/bin/gamingmode
-Icon=applications-games
-Type=Application
-EOF
-
-    if [[ -f "$session_file" ]]; then
-        echo "Created gamingmode session file at $session_file"
-    else
-        echo "Failed to create gamingmode session file."
     fi
 }
 
@@ -1032,16 +1095,19 @@ main() {
     # Step 10: Disable Steam updates
     disable_steam_updates
 
-    # Step 11: Apply wallpaper
+    # Step 11: Modify Steam UI scaling for Switch display
+    modify_steam_ui_scaling
+
+    # Step 12: Apply wallpaper
     apply_wallpaper
 
-    # Step 12: Create gaming mode shortcut
+    # Step 13: Create gaming mode shortcut
     create_gaming_shortcut
 
-    # Step 13: Cleanup old desktop file and create gamingmode session
+    # Step 14: Cleanup old desktop file
     cleanup_desktop
 
-    # Step 14: Show completion message
+    # Step 15: Show completion message
     show_info "Install finished successfully!"
 
     # Cleanup
