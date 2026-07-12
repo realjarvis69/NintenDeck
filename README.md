@@ -6,7 +6,7 @@ NintenDeck
 
 
 # 📕 About
-NintenDeck is a SteamOS recreation for L4S distros, based on SilfurFX's [SwitchDeck](https://github.com/SildurFX/Switchdeck/)
+NintenDeck is a SteamOS recreation for L4S distros, based on SildurFX's [SwitchDeck](https://github.com/SildurFX/Switchdeck/)
 
 ### 🎨 Features
 
