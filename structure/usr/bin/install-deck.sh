@@ -40,43 +40,94 @@ check_wifi() {
     echo "$connected"
 }
 
-# ===== GUI HELPERS =====
-# Functions that use kdialog for all GUI interactions
+# ===== KDIALOG HELPERS (Only for early errors and password) =====
+# These are used before Zenity is installed
 
-# Prompt for password using kdialog
-get_password() {
-    kdialog --password "Enter your sudo password:" 2>/dev/null
+show_early_error() {
+    local message="$1"
+    if command -v kdialog &>/dev/null; then
+        kdialog --error "$message" 2>/dev/null
+    else
+        echo "ERROR: $message"
+    fi
 }
 
-# Show error dialog using kdialog
+get_password_kdialog() {
+    if command -v kdialog &>/dev/null; then
+        kdialog --password "Enter your sudo password:" 2>/dev/null
+    else
+        echo "kdialog not found. Please install kdialog."
+        exit 1
+    fi
+}
+
+# ===== ZENITY HELPERS =====
+# These are used after Zenity is installed
+
+# Prompt for password using Zenity
+get_password_zenity() {
+    zenity --password --title="Authentication Required" --text="Enter your sudo password:" --width=400 2>/dev/null
+}
+
+# Show error dialog
 show_error() {
     local message="$1"
-    kdialog --error "$message" 2>/dev/null
+    if command -v zenity &>/dev/null; then
+        zenity --error --title="Error" --text="$message" --width=400 2>/dev/null
+    else
+        echo "ERROR: $message"
+    fi
 }
 
-# Show info dialog using kdialog
+# Show info dialog
 show_info() {
     local message="$1"
-    kdialog --msgbox "$message" 2>/dev/null
+    if command -v zenity &>/dev/null; then
+        zenity --info --title="Information" --text="$message" --width=400 2>/dev/null
+    else
+        echo "INFO: $message"
+    fi
 }
 
-# Show yes/no question dialog using kdialog
+# Show yes/no question dialog
 show_question() {
     local message="$1"
-    kdialog --yesno "$message" 2>/dev/null
-    return $?
+    if command -v zenity &>/dev/null; then
+        zenity --question --title="Question" --text="$message" --width=400 2>/dev/null
+        return $?
+    else
+        echo "QUESTION: $message"
+        return 1
+    fi
 }
 
-# Show warning dialog using kdialog
+# Show warning dialog
 show_warning() {
     local message="$1"
-    kdialog --warning "$message" 2>/dev/null
+    if command -v zenity &>/dev/null; then
+        zenity --warning --title="Warning" --text="$message" --width=400 2>/dev/null
+    else
+        echo "WARNING: $message"
+    fi
 }
 
-# Show passive popup (non-intrusive notification)
-show_passive_popup() {
-    local message="$1"
-    kdialog --passivepopup "$message" 3 2>/dev/null
+# Show progress dialog with Zenity
+show_progress() {
+    local title="$1"
+    local text="$2"
+
+    if command -v zenity &>/dev/null; then
+        zenity --progress \
+            --title="$title" \
+            --text="$text" \
+            --percentage=0 \
+            --width=450 \
+            --auto-close \
+            --no-cancel 2>/dev/null
+    else
+        # Fallback - just show a message
+        show_info "$title\n\n$text\n\nPlease wait..."
+    fi
 }
 
 # ===== INSTALL ZENITY =====
@@ -87,25 +138,26 @@ install_zenity() {
     fi
 
     if ! command -v dnf &>/dev/null; then
-        show_error "DNF not found. Please install zenity manually."
+        echo "DNF not found. Please install zenity manually."
         return 1
     fi
 
-    show_warning "Zenity is required but not installed.\n\nClick OK to install it using DNF."
+    # Use kdialog for warning since zenity isn't installed
+    if command -v kdialog &>/dev/null; then
+        kdialog --warning "Zenity is required but not installed.\n\nClick OK to install it using DNF." 2>/dev/null
+    fi
 
-    local password=$(kdialog --password "Enter sudo password to install Zenity:" 2>/dev/null)
+    local password=$(get_password_kdialog)
     if [[ -z "$password" ]]; then
-        show_error "No password provided. Cannot install Zenity."
+        echo "No password provided. Cannot install Zenity."
         return 1
     fi
 
     echo "$password" | sudo -S dnf install -y zenity 2>/dev/null
 
     if [[ $? -eq 0 ]] && command -v zenity &>/dev/null; then
-        show_passive_popup "Zenity installed successfully!"
         return 0
     else
-        show_error "Failed to install Zenity. Please install it manually: sudo dnf install zenity"
         return 1
     fi
 }
@@ -153,17 +205,13 @@ install_all_packages() {
         bluez-tools
         brightnessctl
         box64
-        zenity
     )
-
-    show_info "Installing required packages:\n${packages[*]}"
 
     if ! sudo dnf install -y "${packages[@]}" 2>/dev/null; then
         show_warning "Some packages failed to install.\n\nInstall manually if needed:\n${packages[*]}"
         return 0
     fi
 
-    show_passive_popup "All packages installed successfully!"
     return 0
 }
 
@@ -719,8 +767,7 @@ install_decky() {
                 fi
             elif echo "$output" | grep -q "Check for SELinux"; then
                 status_message="Configuring SELinux permissions"
-            elif echo "$output" | grep -q "systemctl" || echo "$output" | grep -q "daemon-reload"; then
-                if [[ $progress -lt 90 ]]; then
+            elif echo "$output" | grep -q "systemctl" || echo "$output" | grep -q "daemon-reload"; then                if [[ $progress -lt 90 ]]; then
                     progress=90
                 fi
                 status_message="Creating systemd service file"
@@ -839,27 +886,33 @@ cleanup_desktop() {
 
 # ===== MAIN INSTALLATION =====
 main() {
-    # Step 1: Check internet connection
+    # Step 1: Check internet connection - use kdialog for error
     if ! check_wifi; then
-        show_error "No WiFi connection detected.\n\nPlease connect to a network and try again."
+        show_early_error "No WiFi connection detected.\n\nPlease connect to a network and try again."
         exit 1
     fi
 
-    # Step 2: Get sudo password using kdialog
-    PASSWORD=$(get_password)
+    # Step 2: Install Zenity if missing (uses kdialog for password)
+    if ! install_zenity; then
+        echo "Failed to install Zenity. Please install it manually: sudo dnf install zenity"
+        exit 1
+    fi
+
+    # Step 3: Get sudo password using Zenity (now that it's installed)
+    PASSWORD=$(get_password_zenity)
     if [[ -z "$PASSWORD" ]]; then
         show_error "No password provided. Exiting."
         exit 1
     fi
 
-    # Step 3: Cache sudo credentials
+    # Step 4: Cache sudo credentials
     cache_sudo "$PASSWORD"
     unset PASSWORD
 
-    # Step 4: Install all packages in one go
+    # Step 5: Install all packages in one go
     install_all_packages
 
-    # Step 5: Install Steam
+    # Step 6: Install Steam
     (
         if install_steam; then
             echo "100"
@@ -868,9 +921,9 @@ main() {
             show_error "Failed to install Steam.\n\nPlease check your internet connection and try again."
             exit 1
         fi
-    ) | (command -v zenity &>/dev/null && zenity --progress --title="Installing Steam" --text="Starting Steam installation..." --percentage=0 --width=450 --auto-close --no-cancel 2>/dev/null || cat)
+    ) | show_progress "Installing Steam" "Starting Steam installation..."
 
-    # Step 6: Install Decky Loader
+    # Step 7: Install Decky Loader
     (
         if install_decky; then
             echo "100"
@@ -879,9 +932,9 @@ main() {
             show_error "Failed to install Decky Loader.\n\nPlease check your internet connection and try again."
             exit 1
         fi
-    ) | (command -v zenity &>/dev/null && zenity --progress --title="Installing Decky Loader" --text="Starting Decky Loader installation..." --percentage=0 --width=450 --auto-close --no-cancel 2>/dev/null || cat)
+    ) | show_progress "Installing Decky Loader" "Starting Decky Loader installation..."
 
-    # Step 7: Install animations if present
+    # Step 8: Install animations if present
     if [[ -d "/usr/share/animations" ]]; then
         local has_animations=false
         [[ -d "/usr/share/animations/steamui/movies" ]] && [[ -n "$(ls -A /usr/share/animations/steamui/movies 2>/dev/null)" ]] && has_animations=true
@@ -890,26 +943,26 @@ main() {
         if [[ "$has_animations" == "true" ]]; then
             (
                 install_animations "$HOME"
-            ) | (command -v zenity &>/dev/null && zenity --progress --title="Installing Animations" --text="Copying custom animations to Steam..." --percentage=0 --width=450 --auto-close --no-cancel 2>/dev/null || cat)
+            ) | show_progress "Installing Animations" "Copying custom animations to Steam..."
         fi
     fi
 
-    # Step 8: Configure SDDM for autologin
+    # Step 9: Configure SDDM for autologin
     ensure_sddm_config
 
-    # Step 9: Disable Steam updates
+    # Step 10: Disable Steam updates
     disable_steam_updates
 
-    # Step 10: Apply wallpaper
+    # Step 11: Apply wallpaper
     apply_wallpaper
 
-    # Step 11: Create gaming mode shortcut
+    # Step 12: Create gaming mode shortcut
     create_gaming_shortcut
 
-    # Step 12: Cleanup old desktop file
+    # Step 13: Cleanup old desktop file
     cleanup_desktop
 
-    # Step 13: Show completion message
+    # Step 14: Show completion message
     show_info "Install finished successfully!"
 
     # Cleanup

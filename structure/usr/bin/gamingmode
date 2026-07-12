@@ -19,6 +19,11 @@ openbox &
 
 # splash
 feh --fullscreen --borderless --auto-zoom --hide-pointer --image-bg black /usr/share/splash/steam-splash.png &
+FEH=$!
+( while ! xdotool search --onlyvisible --class "steam" >/dev/null 2>&1; do
+    sleep 1
+else
+    kill "$FEH" 2>/dev/null ) &
 # make screen not go turn off
 xset s off
 xset s noblank
