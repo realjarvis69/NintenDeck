@@ -23,6 +23,7 @@ export interface Translations {
   tab_compatibility: string;
   tab_wifi: string;
   tab_bluetooth: string;
+  audio_tab: string;
 
   // System tab
   brightness_label: string;
@@ -91,8 +92,8 @@ export interface Translations {
   // Utilities tab
   utilities_title: string;
   reboot_hekate: string;
-  switch_desktop: string;
   confirm: string;
+  cancel: string;
 
   // Compatibility tab
   compatibility_title: string;
@@ -126,6 +127,8 @@ export interface Translations {
   rating_unknown: string;
   compatibility_rating: string;
   recommended_oc_mode: string;
+  ram_oc: string;
+  compatibility_tool: string;
   average_fps: string;
   recommended_proton: string;
   launch_options: string;
@@ -152,6 +155,36 @@ export interface Translations {
 
   // Placeholders
   placeholder_soon: string;
+
+  // Display tab
+  display_settings: string;
+  display_select_display: string;
+  display_resolution: string;
+  display_refresh_rate: string;
+  display_apply: string;
+  display_applying: string;
+  display_applied_success: string;
+  display_apply_failed: string;
+  display_res_failed: string;
+  display_refresh_failed: string;
+  display_no_displays: string;
+  display_warning: string;
+  display_internal_brightness: string;
+  display_current_display: string;
+  display_builtin: string;
+  display_external: string;
+
+  // Audio tab
+  audio_settings: string;
+  audio_output: string;
+  audio_input: string;
+  audio_output_device: string;
+  audio_input_device: string;
+  audio_select_output: string;
+  audio_select_input: string;
+
+  // Rating label for badge
+  rating_label: string;
 }
 
 // ---------- Translations ----------
@@ -174,6 +207,7 @@ const defaultTranslations: Record<Language, Translations> = {
     tab_compatibility: "Compatibility",
     tab_wifi: "Wi-Fi",
     tab_bluetooth: "Bluetooth",
+    audio_tab: "Audio",
 
     // System
     brightness_label: "Brightness",
@@ -242,8 +276,8 @@ const defaultTranslations: Record<Language, Translations> = {
     // Utilities
     utilities_title: "Utilities",
     reboot_hekate: "Reboot to Hekate",
-    switch_desktop: "Switch to Desktop",
     confirm: "Confirm",
+    cancel: "Cancel",
 
     // Compatibility
     compatibility_title: "Game Compatibility",
@@ -277,6 +311,8 @@ const defaultTranslations: Record<Language, Translations> = {
     rating_unknown: "Unknown",
     compatibility_rating: "Rating",
     recommended_oc_mode: "Recommended OC Mode",
+    ram_oc: "RAM OC",
+    compatibility_tool: "Compatibility Tool",
     average_fps: "Average FPS",
     recommended_proton: "Recommended Proton",
     launch_options: "Launch Options",
@@ -303,6 +339,36 @@ const defaultTranslations: Record<Language, Translations> = {
 
     // Placeholders
     placeholder_soon: "Coming soon!",
+
+    // Display tab
+    display_settings: "Display Settings",
+    display_select_display: "Select Display",
+    display_resolution: "Resolution",
+    display_refresh_rate: "Refresh Rate",
+    display_apply: "Apply Settings",
+    display_applying: "Applying...",
+    display_applied_success: "Settings applied successfully!",
+    display_apply_failed: "Failed to apply settings",
+    display_res_failed: "Failed to set resolution",
+    display_refresh_failed: "Failed to set refresh rate",
+    display_no_displays: "No displays found",
+    display_warning: "Resolutions over 720p may cause lag and may break some games launching at all",
+    display_internal_brightness: "Internal display brightness control",
+    display_current_display: "Current display: {displayName} (internal display)",
+    display_builtin: "Built-in Display",
+    display_external: "External Monitor",
+
+    // Audio tab
+    audio_settings: "Audio Settings",
+    audio_output: "Output",
+    audio_input: "Input",
+    audio_output_device: "Output Device",
+    audio_input_device: "Input Device",
+    audio_select_output: "Select output device",
+    audio_select_input: "Select input device",
+
+    // Rating label for badge
+    rating_label: "Rating",
   },
   ru: {
     plugin_title: "NintenDeck",
@@ -322,6 +388,7 @@ const defaultTranslations: Record<Language, Translations> = {
     tab_compatibility: "Совместимость",
     tab_wifi: "Wi-Fi",
     tab_bluetooth: "Bluetooth",
+    audio_tab: "Аудио",
 
     // System
     brightness_label: "Яркость",
@@ -390,8 +457,8 @@ const defaultTranslations: Record<Language, Translations> = {
     // Utilities
     utilities_title: "Утилиты",
     reboot_hekate: "Перезагрузка в Hekate",
-    switch_desktop: "Переключиться на рабочий стол",
     confirm: "Подтвердить",
+    cancel: "Отмена",
 
     // Compatibility
     compatibility_title: "Совместимость игр",
@@ -425,6 +492,8 @@ const defaultTranslations: Record<Language, Translations> = {
     rating_unknown: "Неизвестно",
     compatibility_rating: "Рейтинг",
     recommended_oc_mode: "Рекомендуемый режим OC",
+    ram_oc: "RAM OC",
+    compatibility_tool: "Средство совместимости",
     average_fps: "Средний FPS",
     recommended_proton: "Рекомендуемый Proton",
     launch_options: "Параметры запуска",
@@ -451,6 +520,36 @@ const defaultTranslations: Record<Language, Translations> = {
 
     // Placeholders
     placeholder_soon: "Скоро!",
+
+    // Display tab
+    display_settings: "Настройки дисплея",
+    display_select_display: "Выбрать дисплей",
+    display_resolution: "Разрешение",
+    display_refresh_rate: "Частота обновления",
+    display_apply: "Применить",
+    display_applying: "Применение...",
+    display_applied_success: "Настройки успешно применены!",
+    display_apply_failed: "Не удалось применить настройки",
+    display_res_failed: "Не удалось установить разрешение",
+    display_refresh_failed: "Не удалось установить частоту обновления",
+    display_no_displays: "Дисплеи не найдены",
+    display_warning: "Разрешения выше 720p могут вызывать задержки и мешать запуску некоторых игр",
+    display_internal_brightness: "Управление яркостью встроенного дисплея",
+    display_current_display: "Текущий дисплей: {displayName} (встроенный)",
+    display_builtin: "Встроенный дисплей",
+    display_external: "Внешний монитор",
+
+    // Audio tab
+    audio_settings: "Настройки аудио",
+    audio_output: "Выход",
+    audio_input: "Вход",
+    audio_output_device: "Выходное устройство",
+    audio_input_device: "Входное устройство",
+    audio_select_output: "Выбрать выходное устройство",
+    audio_select_input: "Выбрать входное устройство",
+
+    // Rating label for badge
+    rating_label: "Рейтинг",
   },
   fr: {
     plugin_title: "NintenDeck",
@@ -470,6 +569,7 @@ const defaultTranslations: Record<Language, Translations> = {
     tab_compatibility: "Compatibilité",
     tab_wifi: "Wi-Fi",
     tab_bluetooth: "Bluetooth",
+    audio_tab: "Audio",
 
     // System
     brightness_label: "Luminosité",
@@ -538,8 +638,8 @@ const defaultTranslations: Record<Language, Translations> = {
     // Utilities
     utilities_title: "Utilitaires",
     reboot_hekate: "Rédémarrer vers Hekate",
-    switch_desktop: "Basculer vers le Bureau",
     confirm: "Confirmer",
+    cancel: "Annuler",
 
     // Compatibility
     compatibility_title: "Compatibilité des jeux",
@@ -573,6 +673,8 @@ const defaultTranslations: Record<Language, Translations> = {
     rating_unknown: "Inconnu",
     compatibility_rating: "Évaluation",
     recommended_oc_mode: "Mode OC recommandé",
+    ram_oc: "RAM OC",
+    compatibility_tool: "Outil de compatibilité",
     average_fps: "FPS moyen",
     recommended_proton: "Version de Proton recommandée",
     launch_options: "Options de lancement",
@@ -599,6 +701,36 @@ const defaultTranslations: Record<Language, Translations> = {
 
     // Placeholder
     placeholder_soon: "Bientôt disponible!",
+
+    // Display tab
+    display_settings: "Paramètres d'affichage",
+    display_select_display: "Sélectionner l'écran",
+    display_resolution: "Résolution",
+    display_refresh_rate: "Fréquence de rafraîchissement",
+    display_apply: "Appliquer",
+    display_applying: "Application...",
+    display_applied_success: "Paramètres appliqués avec succès !",
+    display_apply_failed: "Échec de l'application des paramètres",
+    display_res_failed: "Échec de la définition de la résolution",
+    display_refresh_failed: "Échec de la définition de la fréquence de rafraîchissement",
+    display_no_displays: "Aucun écran trouvé",
+    display_warning: "Les résolutions supérieures à 720p peuvent provoquer des ralentissements et empêcher certains jeux de se lancer",
+    display_internal_brightness: "Contrôle de la luminosité de l'écran interne",
+    display_current_display: "Écran actuel : {displayName} (interne)",
+    display_builtin: "Écran intégré",
+    display_external: "Moniteur externe",
+
+    // Audio tab
+    audio_settings: "Paramètres audio",
+    audio_output: "Sortie",
+    audio_input: "Entrée",
+    audio_output_device: "Périphérique de sortie",
+    audio_input_device: "Périphérique d'entrée",
+    audio_select_output: "Sélectionner le périphérique de sortie",
+    audio_select_input: "Sélectionner le périphérique d'entrée",
+
+    // Rating label for badge
+    rating_label: "Évaluation",
   },
   es: {
     plugin_title: "NintenDeck",
@@ -618,6 +750,7 @@ const defaultTranslations: Record<Language, Translations> = {
     tab_compatibility: "Compatibilidad",
     tab_wifi: "Wi-Fi",
     tab_bluetooth: "Bluetooth",
+    audio_tab: "Audio",
 
     // System
     brightness_label: "Brillo",
@@ -686,8 +819,8 @@ const defaultTranslations: Record<Language, Translations> = {
     // Utilities
     utilities_title: "Utilidades",
     reboot_hekate: "Reiniciar a Hekate",
-    switch_desktop: "Cambiar a Escritorio",
     confirm: "Confirmar",
+    cancel: "Cancelar",
 
     // Compatibility
     compatibility_title: "Compatibilidad de juegos",
@@ -721,6 +854,8 @@ const defaultTranslations: Record<Language, Translations> = {
     rating_unknown: "Desconocido",
     compatibility_rating: "Clasificación",
     recommended_oc_mode: "Modo OC recomendado",
+    ram_oc: "RAM OC",
+    compatibility_tool: "Herramienta de compatibilidad",
     average_fps: "FPS promedio",
     recommended_proton: "Protón recomendado",
     launch_options: "Opciones de lanzamiento",
@@ -747,6 +882,36 @@ const defaultTranslations: Record<Language, Translations> = {
 
     // Placeholders
     placeholder_soon: "¡Muy pronto!",
+
+    // Display tab
+    display_settings: "Configuración de pantalla",
+    display_select_display: "Seleccionar pantalla",
+    display_resolution: "Resolución",
+    display_refresh_rate: "Frecuencia de actualización",
+    display_apply: "Aplicar",
+    display_applying: "Aplicando...",
+    display_applied_success: "¡Configuración aplicada con éxito!",
+    display_apply_failed: "Error al aplicar la configuración",
+    display_res_failed: "Error al establecer la resolución",
+    display_refresh_failed: "Error al establecer la frecuencia de actualización",
+    display_no_displays: "No se encontraron pantallas",
+    display_warning: "Las resoluciones superiores a 720p pueden causar retrasos y evitar que algunos juegos se inicien",
+    display_internal_brightness: "Control de brillo de la pantalla interna",
+    display_current_display: "Pantalla actual: {displayName} (interna)",
+    display_builtin: "Pantalla integrada",
+    display_external: "Monitor externo",
+
+    // Audio tab
+    audio_settings: "Configuración de audio",
+    audio_output: "Salida",
+    audio_input: "Entrada",
+    audio_output_device: "Dispositivo de salida",
+    audio_input_device: "Dispositivo de entrada",
+    audio_select_output: "Seleccionar dispositivo de salida",
+    audio_select_input: "Seleccionar dispositivo de entrada",
+
+    // Rating label for badge
+    rating_label: "Clasificación",
   },
 };
 

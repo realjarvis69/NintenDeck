@@ -2,7 +2,8 @@ polkit.addRule(function(action, subject) {
     if (action.id == "org.freedesktop.policykit.exec" &&
         (action.lookup("program") == "/usr/bin/mkdir" ||
          action.lookup("program") == "/usr/bin/tee" ||
-         action.lookup("program") == "/usr/bin/sed")) {
+         action.lookup("program") == "/usr/bin/sed" ||
+         action.lookup("program") == "/usr/bin/mv")) {
         return polkit.Result.YES;
     }
 });

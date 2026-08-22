@@ -1,0 +1,16 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "real_jarvis"
+            }
+        ],
+        "Id": "BlueDeck",
+        "License": "CC-BY-SA-4.0",
+        "Name": "Blue Deck"
+    },
+    "X-KDE-PlasmaImageWallpaper-AccentColor": {
+        "Dark": "#233760",
+        "Light": "#5073ab"
+    }
+}

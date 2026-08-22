@@ -1,0 +1,9 @@
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.policykit.exec") {
+        var program = action.lookup("program");
+        if (program == "/usr/sbin/ip") {
+            return polkit.Result.YES;
+        }
+    }
+});
+
