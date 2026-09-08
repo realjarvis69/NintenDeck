@@ -1,0 +1,22 @@
+"InstallConfigStore"
+{
+	"UI"
+	{
+		"display"
+		{
+			"Current"
+			{
+				"MinScaleFactor"		"0.474341660737991333"
+				"MaxScaleFactor"		"2.27314615249633789"
+				"IsExternalDisplay"		"1"
+				"name"		"External: DSI-0|||Fullscreen-1280x720"
+				"AutoScaleFactor"		"0.948683321475982666"
+				"ScaleFactor"		"1.37559080123901367"
+			}
+			"External: DSI-0|||Fullscreen-1280x720"
+			{
+				"ScaleFactor"		"1.37559080123901367"
+			}
+		}
+	}
+}
