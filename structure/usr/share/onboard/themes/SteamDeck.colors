@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<color_scheme name="Steam Deck" format="2.1">
+    <window type="key-popup">
+        <color element="border" rgb="#151921" opacity="1.0"/>
+    </window>
+
+    <layer> <color element="background" rgb="#151921" opacity="1.0"/> </layer>
+    <layer> <color element="background" rgb="#151921" opacity="0.9"/> </layer>
+    <layer> <color element="background" rgb="#151921" opacity="0.9"/> </layer>
+
+    <key_group>
+        <!-- Key fill states -->
+        <color element="fill"   rgb="#00040c"/>
+        <color element="fill"   rgb="#ffffff" hover="true"/>
+        <color element="fill"   rgb="#1a9fff" pressed="true"/>
+        
+        <!-- Key border stroke states -->
+        <color element="stroke" rgb="#151921"/>
+        <color element="stroke" rgb="#ffffff" hover="true"/>
+        <color element="stroke" rgb="#1a9fff" pressed="true"/>
+        
+        <!-- Key label text states -->
+        <color element="label"  rgb="#ffffff"/>
+        <color element="label"  rgb="#000000" hover="true"/>
+        <color element="label"  rgb="#000000" pressed="true"/> 
+        
+        <key_group>
+            <color element="fill" rgb="#00040c"/>
+            <color element="fill" rgb="#ffffff" hover="true"/>
+            <color element="fill" rgb="#1a9fff" pressed="true"/>
+            <color element="label" rgb="#ffffff"/>
+            <color element="label" rgb="#000000" hover="true"/>
+            <color element="label" rgb="#000000" pressed="true"/>
+            icon1, icon2, icon3,
+            RCTL, LCTL, RALT, LALT, LWIN, CAPS, 
+            LFSH, RTSH, NMLK, ESC,
+            MENU, RWIN, BKSP, TAB, RTRN, 
+            KPDL, KPEN,
+            LEFT, RGHT, UP, DOWN, INS, DELE, HOME, END, PGUP, PGDN,
+            F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+            Prnt, Pause, Scroll,
+            secondaryclick, middleclick, doubleclick, dragclick, hoverclick,
+            hide, showclick, move, layer,
+            quit, settings
+        </key_group>
+    </key_group>
+</color_scheme>

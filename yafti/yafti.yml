@@ -1,0 +1,39 @@
+title: "NintenDeck Setup"
+properties:
+  mode: "run-once"
+
+screens:
+  welcome:
+    source: yafti.screen.title
+    values:
+      title: "NintenDeck Setup"
+      description: "This setup will install necessary components to run the OS"
+      show_head: true
+
+  first_step:
+    source: yafti.screen.package
+    values:
+      title: "Configuration"
+      show_head: true
+      package_manager: yafti.plugin.run
+      groups:
+        Essentials ig:
+          title: "Essentials ig"
+          default: true
+          required: true
+          packages:
+            - "Steam Launcher": "/home/jarvis/test.sh"
+
+        Other QoL stuff:
+          title: "Other QoL stuff"
+          default: false
+          packages:
+            - ";aeiorgh;sep0r": "echo 'Sudo apt install opsec'"
+
+  finished:
+    source: yafti.screen.title
+    values:
+      title: "All Done!"
+      description: "Setup is complete. You can close this window."
+      icon: "emblem-ok-symbolic"
+      show_head: true

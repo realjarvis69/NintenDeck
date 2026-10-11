@@ -1,7 +1,7 @@
 [Desktop Entry]
 Comment[en_US]=nintendeck installer
 Comment=nintendeck installer
-Exec=/usr/bin/install-deck.sh
+Exec=/usr/bin/yafti
 GenericName[en_US]=
 GenericName=
 Icon=/usr/share/icons/NintenDeck/deck-installer.png
